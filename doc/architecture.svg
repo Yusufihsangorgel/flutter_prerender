@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="660" viewBox="0 0 1160 660" font-family="Menlo, monospace">
+  <defs>
+    <marker id="arw" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#38BDF8"/>
+    </marker>
+    <marker id="arwd" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#64748B"/>
+    </marker>
+  </defs>
+
+  <rect width="1160" height="660" fill="#0B1220"/>
+  <text x="48" y="56" font-size="26" font-weight="bold" fill="#E2E8F0">How flutter_prerender works</text>
+  <text x="48" y="86" font-size="15" fill="#94A3B8">Prerender each Flutter web route to static HTML at build time, then serve it to crawlers.</text>
+
+  <!-- Panel 1: prerender pipeline -->
+  <rect x="48" y="112" width="1064" height="200" rx="12" fill="#0E1A2E" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="72" y="142" font-size="14" fill="#64748B">PRERENDER PIPELINE  ·  dart run flutter_prerender</text>
+
+  <rect x="72" y="170" width="280" height="104" rx="8" fill="#111C2E" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="88" y="204" font-size="15" fill="#E2E8F0">flutter build web</text>
+  <text x="88" y="228" font-size="12.5" fill="#94A3B8">build/web output</text>
+  <text x="88" y="250" font-size="12.5" fill="#64748B">canvas UI, no readable DOM</text>
+
+  <rect x="440" y="170" width="280" height="104" rx="8" fill="#111C2E" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="456" y="204" font-size="15" fill="#E2E8F0">Headless Chrome</text>
+  <text x="456" y="228" font-size="12.5" fill="#94A3B8">package:puppeteer</text>
+  <text x="456" y="250" font-size="12.5" fill="#64748B">loads route, a11y tree on</text>
+
+  <rect x="808" y="170" width="280" height="104" rx="8" fill="#111C2E" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="824" y="204" font-size="15" fill="#E2E8F0">Static HTML per route</text>
+  <text x="824" y="228" font-size="12.5" fill="#94A3B8">build/prerendered/ + sitemap.xml</text>
+  <text x="824" y="250" font-size="12.5" fill="#64748B">h1, p, a, title, meta, OG tags</text>
+
+  <path d="M352 222 L440 222" stroke="#38BDF8" stroke-width="2" fill="none" marker-end="url(#arw)"/>
+  <path d="M720 222 L808 222" stroke="#38BDF8" stroke-width="2" fill="none" marker-end="url(#arw)"/>
+
+  <!-- bridge caption -->
+  <text x="48" y="340" font-size="13.5" fill="#64748B">Deploy build/prerendered/ next to build/web, then pick a serving topology:</text>
+
+  <!-- Panel A: bot routing -->
+  <rect x="48" y="356" width="520" height="268" rx="12" fill="#0E1A2E" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="72" y="386" font-size="14" fill="#64748B">A. BOT ROUTING  ·  by User-Agent (nginx)</text>
+
+  <rect x="176" y="404" width="264" height="54" rx="8" fill="#111C2E" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="192" y="428" font-size="15" fill="#E2E8F0">Match User-Agent</text>
+  <text x="192" y="448" font-size="12.5" fill="#94A3B8">map $http_user_agent</text>
+
+  <text x="120" y="498" font-size="12" fill="#64748B">matched UA</text>
+  <text x="460" y="498" font-size="12" fill="#64748B">default</text>
+
+  <rect x="72" y="524" width="224" height="80" rx="8" fill="#111C2E" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="88" y="552" font-size="15" fill="#E2E8F0">Bot</text>
+  <text x="88" y="574" font-size="12.5" fill="#94A3B8">serve prerendered HTML</text>
+  <text x="88" y="594" font-size="12.5" fill="#64748B">build/prerendered/</text>
+
+  <rect x="320" y="524" width="224" height="80" rx="8" fill="#111C2E" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="336" y="552" font-size="15" fill="#E2E8F0">Human</text>
+  <text x="336" y="574" font-size="12.5" fill="#94A3B8">serve the live SPA</text>
+  <text x="336" y="594" font-size="12.5" fill="#64748B">boots from /index.html</text>
+
+  <path d="M270 458 L200 524" stroke="#38BDF8" stroke-width="2" fill="none" marker-end="url(#arw)"/>
+  <path d="M346 458 L416 524" stroke="#64748B" stroke-width="1.8" fill="none" marker-end="url(#arwd)"/>
+
+  <!-- Panel B: overlay -->
+  <rect x="592" y="356" width="520" height="268" rx="12" fill="#0E1A2E" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="616" y="386" font-size="14" fill="#64748B">B. OVERLAY  ·  prerender-all + hydration</text>
+
+  <rect x="720" y="404" width="264" height="54" rx="8" fill="#111C2E" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="736" y="428" font-size="15" fill="#E2E8F0">Prerendered index.html</text>
+  <text x="736" y="448" font-size="12.5" fill="#94A3B8">same page for everyone</text>
+
+  <text x="636" y="498" font-size="12" fill="#64748B">hydrate</text>
+  <text x="1000" y="498" font-size="12" fill="#64748B">read</text>
+
+  <rect x="616" y="524" width="224" height="80" rx="8" fill="#111C2E" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="632" y="552" font-size="15" fill="#E2E8F0">Human</text>
+  <text x="632" y="574" font-size="12.5" fill="#94A3B8">boots the Flutter app</text>
+  <text x="632" y="594" font-size="12.5" fill="#64748B">via /flutter_bootstrap.js</text>
+
+  <rect x="864" y="524" width="224" height="80" rx="8" fill="#111C2E" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="880" y="552" font-size="15" fill="#E2E8F0">Crawler</text>
+  <text x="880" y="574" font-size="12.5" fill="#94A3B8">reads static content</text>
+  <text x="880" y="594" font-size="12.5" fill="#64748B">no JavaScript needed</text>
+
+  <path d="M814 458 L744 524" stroke="#64748B" stroke-width="1.8" fill="none" marker-end="url(#arwd)"/>
+  <path d="M890 458 L960 524" stroke="#64748B" stroke-width="1.8" fill="none" marker-end="url(#arwd)"/>
+</svg>

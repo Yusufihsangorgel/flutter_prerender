@@ -14,6 +14,8 @@ Flutter experience while a crawler reads the static content.
 This is the [server-side prerendering that Google Search recommends for
 canvas/WebGL content][google-webgl], applied to Flutter web as a build step.
 
+![Diagram of the flutter_prerender build pipeline and the two serving topologies: bot routing by user agent, and overlay with hydration](https://raw.githubusercontent.com/Yusufihsangorgel/flutter_prerender/main/doc/architecture.png)
+
 ## Why this is needed
 
 A default Flutter web build draws its UI to a canvas. The DOM contains no
