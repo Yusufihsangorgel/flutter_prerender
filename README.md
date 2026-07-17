@@ -1,5 +1,7 @@
 # flutter_prerender
 
+![flutter_prerender banner](doc/banner.png)
+
 Prerender a Flutter web app to static, crawlable HTML for SEO.
 
 `flutter_prerender` loads each route of a `flutter build web` output in headless
