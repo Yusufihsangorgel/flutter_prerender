@@ -1,6 +1,6 @@
 # flutter_prerender
 
-![flutter_prerender banner](doc/banner.png)
+![flutter_prerender banner](https://raw.githubusercontent.com/Yusufihsangorgel/flutter_prerender/main/doc/banner.png)
 
 Prerender a Flutter web app to static, crawlable HTML for SEO.
 
@@ -22,9 +22,9 @@ readable text, so crawlers that do not run the app see nothing:
 - **Googlebot does not support WebGL.** Google's own guidance is to
   "use server-side rendering to prerender ... [which] makes your content
   accessible to everyone, including Googlebot." ([Google Search][google-webgl])
-- **Googlebot fetches at most 2 MB per resource** and ignores the rest. A
-  default CanvasKit build ships `canvaskit.wasm` well above that limit even
-  after Brotli, so the app may never boot for the crawler at all.
+- **A default CanvasKit build is heavy.** It ships `canvaskit.wasm` at several
+  megabytes even after Brotli. Google warns that large or slow resources can be
+  skipped during rendering, so the app may never boot for the crawler at all.
 - **Crawlers that never run JavaScript** (Facebook, X/Twitter, LinkedIn and
   Slack link unfurlers) only read `index.html`.
 
@@ -135,10 +135,6 @@ server {
 }
 ```
 
-Because the static page loads the real app for JavaScript-capable clients, the
-overlay form serves both audiences without user-agent detection; bot routing
-keeps the human payload untouched at the cost of a routing rule.
-
 ## Getting good output
 
 The recovered structure is only as good as the app's semantics. An unannotated
@@ -157,28 +153,19 @@ accessibility tree on from the outside, so no app source change is required.
 
 ## Content parity
 
-After building each page, `flutter_prerender` runs a parity guard. Be precise
-about what it does and does not check.
+After building each page, `flutter_prerender` runs a parity guard. It compares
+the generated HTML against Flutter's own accessibility text (the only
+machine-readable text the engine exposes) and flags words in the output that are
+not in that text, so it catches extractor drift and hand-edited output. It
+cannot verify the painted canvas, since there is no separate visible-text source
+to compare against. Image alt text is exempt, because it comes from an
+aria-label rather than visible body text. Pass `--fail-on-parity` to turn a flag
+into a hard CI error.
 
-The guard compares the generated HTML against Flutter's own accessibility text
-(the text the semantics tree exposes once accessibility is on), which is the
-only machine-readable text the engine gives you. It flags words that appear in
-the output but not in that text, so it catches extractor drift and hand-edited
-output. It cannot independently verify the painted canvas, because there is no
-separate visible-text source to compare against. True parity ultimately rests
-on Flutter's semantics matching the UI it paints, which is the same thing a
-screen reader depends on. Pass `--fail-on-parity` to turn a flag into a hard CI
-error.
-
-Image alt text is exempt from the check by design: it comes from an aria-label
-rather than visible body text, and describing a visible image is standard SEO,
-not injection.
-
-The practical rule: keep the recovered content faithful and do not hand-inject
-keywords. Serving crawlers content a user cannot see is cloaking, and search
-engines penalise it. Google draws the line at "completely different" content and
-explicitly endorses prerendering canvas/WebGL, so a faithful prerender stays
-within its guidance.
+Keep the recovered content faithful and do not hand-inject keywords. Serving
+crawlers content a user cannot see is cloaking, and search engines penalise it.
+Google endorses prerendering canvas/WebGL as long as the content is not
+"completely different", so a faithful prerender stays within its guidance.
 
 ## Limits
 

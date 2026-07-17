@@ -5,6 +5,7 @@ description: >-
   links, meta and a sitemap.
 version: 0.1.0
 repository: https://github.com/Yusufihsangorgel/flutter_prerender
+issue_tracker: https://github.com/Yusufihsangorgel/flutter_prerender/issues
 topics:
   - seo
   - web
