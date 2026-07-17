@@ -14,7 +14,7 @@ jobs:
         with:
           sdk: stable
       - name: Install dependencies
-        run: dart pub get
+        run: dart pub get --no-example
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed .
       - name: Analyze
