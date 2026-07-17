@@ -1,0 +1,21 @@
+# Dart / Pub
+.dart_tool/
+.packages
+pubspec.lock
+build/
+.dart_tool/package_config.json
+
+# Flutter (example app)
+.flutter-plugins
+.flutter-plugins-dependencies
+**/.dart_tool/
+**/build/
+
+# Puppeteer local Chromium download
+.local-chromium/
+
+# Editor / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store

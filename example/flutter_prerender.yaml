@@ -1,0 +1,31 @@
+# Example flutter_prerender configuration.
+#
+# Run from this directory after `flutter build web`:
+#   dart run flutter_prerender -c flutter_prerender.yaml
+buildDir: build/web
+out: build/prerendered
+baseUrl: https://coffee.example.com
+lang: en
+
+sitemap: true
+appScript: true
+
+parity:
+  enabled: true
+  threshold: 0.9
+  failOn: false
+
+defaults:
+  ogType: website
+  image: https://coffee.example.com/og.png
+
+routes:
+  - path: /
+    title: "Zebrafish Coffee Roasters: Ethiopian Yirgacheffe"
+    description: >-
+      Small-batch, carbon-neutral arabica roasted every Tuesday in Munich.
+    jsonLd:
+      "@context": https://schema.org
+      "@type": Organization
+      name: Zebrafish Coffee Roasters
+      url: https://coffee.example.com/

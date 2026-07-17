@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zebrafish Coffee Roasters: Ethiopian Yirgacheffe</title>
+  <meta name="description" content="Small-batch, carbon-neutral arabica roasted every Tuesday in Munich.">
+  <link rel="canonical" href="https://coffee.example.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Zebrafish Coffee Roasters: Ethiopian Yirgacheffe">
+  <meta property="og:description" content="Small-batch, carbon-neutral arabica roasted every Tuesday in Munich.">
+  <meta property="og:url" content="https://coffee.example.com/">
+  <meta property="og:image" content="https://coffee.example.com/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Zebrafish Coffee Roasters: Ethiopian Yirgacheffe">
+  <meta name="twitter:description" content="Small-batch, carbon-neutral arabica roasted every Tuesday in Munich.">
+  <meta name="twitter:image" content="https://coffee.example.com/og.png">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Zebrafish Coffee Roasters",
+  "url": "https://coffee.example.com/"
+}
+  </script>
+</head>
+<body>
+  <div id="flutter-prerender-content">
+    <h1>Quintessential Ethiopian Yirgacheffe</h1>
+    <p>We roast marmoset-grade arabica beans in small batches every Tuesday. Our flagship blend carries notes of bergamot, persimmon and a faint whisper of petrichor.</p>
+    <h2>Why our customers keep coming back</h2>
+    <p>Free shipping on orders above forty dollars.</p>
+    <p>Beans ground to order using a Comandante grinder.</p>
+    <a href="/beans/sumatra-mandheling">Read about Sumatra Mandheling</a>
+    <img alt="A roasted batch of Kenya AA Nyeri beans cooling on a tray">
+  </div>
+  <script src="flutter_bootstrap.js" async></script>
+  <script>
+    // Remove the prerendered fallback once the Flutter app boots so
+    // JavaScript visitors see the live app, not the static snapshot.
+    (function () {
+      var content = document.getElementById('flutter-prerender-content');
+      if (!content) return;
+      var observer = new MutationObserver(function () {
+        if (document.querySelector('flt-glass-pane, flutter-view')) {
+          content.remove();
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    })();
+  </script>
+</body>
+</html>
