@@ -1,3 +1,7 @@
+## 0.1.1
+
+- Docs: tightened the README wording and visuals.
+
 # Changelog
 
 ## 0.1.0
