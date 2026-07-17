@@ -61,6 +61,11 @@ ArgParser buildParser() {
       help: 'Exit non-zero if any page fails the parity guard.',
     )
     ..addFlag(
+      'fail-on-empty',
+      negatable: false,
+      help: 'Exit non-zero if any route recovers no content.',
+    )
+    ..addFlag(
       'dry-run',
       negatable: false,
       help: 'Print the plan and exit without launching a browser.',
@@ -162,9 +167,9 @@ Future<PrerenderConfig> _resolveConfig(ArgResults results) async {
     baseUrl: results.option('base-url'),
     routes: routes,
     chromeExecutable: results.option('chrome'),
-    port: _tryInt(results.option('port')),
-    waitMs: _tryInt(results.option('wait')),
-    parityThreshold: _tryDouble(results.option('parity-threshold')),
+    port: _intOption(results, 'port'),
+    waitMs: _intOption(results, 'wait'),
+    parityThreshold: _doubleOption(results, 'parity-threshold'),
     generateSitemap: results.wasParsed('sitemap')
         ? results.flag('sitemap')
         : null,
@@ -173,6 +178,7 @@ Future<PrerenderConfig> _resolveConfig(ArgResults results) async {
         : null,
     parityCheck: results.wasParsed('parity') ? results.flag('parity') : null,
     failOnParity: results.flag('fail-on-parity') ? true : null,
+    failOnEmpty: results.flag('fail-on-empty') ? true : null,
   );
 }
 
@@ -208,11 +214,20 @@ Future<int> _execute(
       log: verbose ? out.writeln : null,
     );
     _printSummary(result, out);
+    for (final warning in result.allWarnings) {
+      err.writeln('warning: $warning');
+    }
     if (config.failOnParity && result.hasParityWarnings) {
       err.writeln(
         'Parity guard flagged one or more pages and --fail-on-parity is set.',
       );
       return 2;
+    }
+    if (config.failOnEmpty && result.hasEmptyRoutes) {
+      err.writeln(
+        'One or more routes recovered no content and --fail-on-empty is set.',
+      );
+      return 3;
     }
     return 0;
   } finally {
@@ -256,11 +271,16 @@ void _printSummary(PrerenderResult result, StringSink out) {
   out.writeln('Prerendered ${result.routes.length} route(s):');
   for (final route in result.routes) {
     final parity = route.parity;
-    final flag = parity == null
-        ? ''
-        : (parity.isSuspicious
-              ? '  [parity: CHECK, sim ${parity.similarity.toStringAsFixed(2)}]'
-              : '  [parity ok]');
+    final String flag;
+    if (route.isEmpty) {
+      flag = '  [empty: no content recovered]';
+    } else if (parity == null) {
+      flag = '';
+    } else if (parity.isSuspicious) {
+      flag = '  [parity: CHECK, sim ${parity.similarity.toStringAsFixed(2)}]';
+    } else {
+      flag = '  [parity ok]';
+    }
     out.writeln(
       '  ${route.path}  '
       '${route.nodeCount} nodes, ${route.byteCount} bytes$flag',
@@ -271,7 +291,22 @@ void _printSummary(PrerenderResult result, StringSink out) {
   }
 }
 
-int? _tryInt(String? value) => value == null ? null : int.tryParse(value);
+int? _intOption(ArgResults results, String name) {
+  final value = results.option(name);
+  if (value == null) return null;
+  final parsed = int.tryParse(value);
+  if (parsed == null) {
+    throw ConfigException('--$name must be an integer, got "$value".');
+  }
+  return parsed;
+}
 
-double? _tryDouble(String? value) =>
-    value == null ? null : double.tryParse(value);
+double? _doubleOption(ArgResults results, String name) {
+  final value = results.option(name);
+  if (value == null) return null;
+  final parsed = double.tryParse(value);
+  if (parsed == null) {
+    throw ConfigException('--$name must be a number, got "$value".');
+  }
+  return parsed;
+}

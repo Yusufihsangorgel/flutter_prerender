@@ -89,6 +89,31 @@ routes:
     );
   });
 
+  test('parity accepts a boolean shorthand', () {
+    final config = PrerenderConfig.fromYaml('parity: false');
+    expect(config.parityCheck, isFalse);
+  });
+
+  test('parity mapping still configures threshold and failOn', () {
+    final config = PrerenderConfig.fromYaml(
+      'parity:\n  enabled: true\n  threshold: 0.7',
+    );
+    expect(config.parityCheck, isTrue);
+    expect(config.parityThreshold, 0.7);
+  });
+
+  test('rejects a parity value that is neither bool nor mapping', () {
+    expect(
+      () => PrerenderConfig.fromYaml('parity: 3'),
+      throwsA(isA<ConfigException>()),
+    );
+  });
+
+  test('failOnEmpty parses from the config', () {
+    expect(PrerenderConfig.fromYaml('failOnEmpty: true').failOnEmpty, isTrue);
+    expect(const PrerenderConfig().failOnEmpty, isFalse);
+  });
+
   test('copyWith overrides only the provided fields', () {
     const base = PrerenderConfig(buildDir: 'a', outDir: 'b', waitMs: 1000);
     final updated = base.copyWith(buildDir: 'c', failOnParity: true);

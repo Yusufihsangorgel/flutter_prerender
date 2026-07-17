@@ -11,9 +11,23 @@ real `<h1>`, a real `<a href>` and image alt text.
 
 ## Run it
 
+Activate the tool once, then run it from this directory:
+
+```sh
+dart pub global activate flutter_prerender
+flutter build web
+flutter_prerender -c flutter_prerender.yaml
+```
+
+Or run it straight from the package checkout without activating:
+
 ```sh
 flutter build web
-dart run flutter_prerender -c flutter_prerender.yaml
+cd ..   # the flutter_prerender package root
+dart run flutter_prerender \
+  --config example/flutter_prerender.yaml \
+  --build-dir example/build/web \
+  --out example/build/prerendered
 ```
 
 Prerendered HTML is written to `build/prerendered/`:

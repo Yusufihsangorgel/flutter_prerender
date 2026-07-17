@@ -109,7 +109,7 @@ void main() {
     final html = builder.build(nodes: const [], meta: const RouteMeta());
     expect(
       html,
-      contains('<script src="flutter_bootstrap.js" async></script>'),
+      contains('<script src="/flutter_bootstrap.js" async></script>'),
     );
     expect(html, contains('id="flutter-prerender-content"'));
   });

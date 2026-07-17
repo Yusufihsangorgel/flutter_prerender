@@ -47,7 +47,7 @@ class PuppeteerCapturer implements PageCapturer {
     this.executablePath,
     this.extraWaitMs = 4000,
     this.navigationTimeout = const Duration(seconds: 60),
-    this.semanticsTimeout = const Duration(seconds: 15),
+    this.semanticsTimeout = const Duration(seconds: 30),
     this.userAgent = _googlebotUserAgent,
   });
 

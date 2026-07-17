@@ -1,8 +1,8 @@
 name: flutter_prerender
 description: >-
   Prerender a Flutter web app to static, crawlable HTML for SEO. Loads each
-  route in headless Chrome, reads the accessibility tree, and emits real
-  headings, links, meta tags, JSON-LD and a sitemap.
+  route in headless Chrome, reads the accessibility tree, and emits headings,
+  links, meta and a sitemap.
 version: 0.1.0
 repository: https://github.com/Yusufihsangorgel/flutter_prerender
 topics:

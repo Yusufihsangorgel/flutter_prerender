@@ -48,6 +48,17 @@ void main() {
     expect(code, 64);
   });
 
+  test('an invalid numeric flag is rejected, not ignored', () async {
+    final err = StringBuffer();
+    final code = await runCli(
+      ['--build-dir', 'build/web', '--port', 'abc'],
+      out: StringBuffer(),
+      err: err,
+    );
+    expect(code, 1);
+    expect(err.toString(), contains('--port must be an integer'));
+  });
+
   test('no routes exits 1 with an explanatory error', () async {
     final err = StringBuffer();
     final code = await runCli(
@@ -156,6 +167,29 @@ void main() {
       final sitemapXml = sitemap.readAsStringSync();
       expect(sitemapXml, contains('<loc>https://x.com/</loc>'));
       expect(sitemapXml, contains('<loc>https://x.com/about</loc>'));
+    });
+
+    test('--fail-on-empty exits 3 and labels empty routes', () async {
+      final out = StringBuffer();
+      final err = StringBuffer();
+      final code = await runCli(
+        [
+          '--build-dir',
+          buildDir,
+          '--routes',
+          routesFile,
+          '--out',
+          outDir,
+          '--fail-on-empty',
+        ],
+        out: out,
+        err: err,
+        capturerFactory: (_) =>
+            _FakeCapturer(semanticsHtml: '', renderedText: ''),
+      );
+      expect(code, 3);
+      expect(out.toString(), contains('[empty: no content recovered]'));
+      expect(err.toString(), contains('no crawlable content'));
     });
 
     test('--fail-on-parity exits 2 when content is injected', () async {

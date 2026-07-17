@@ -30,10 +30,11 @@ class PrerenderConfig {
     this.defaults = const RouteMeta(),
     this.generateSitemap = true,
     this.includeAppScript = true,
-    this.appScriptSrc = 'flutter_bootstrap.js',
+    this.appScriptSrc = '/flutter_bootstrap.js',
     this.parityCheck = true,
     this.parityThreshold = 0.9,
     this.failOnParity = false,
+    this.failOnEmpty = false,
     this.waitMs = 4000,
     this.port = 0,
     this.chromeExecutable,
@@ -61,10 +62,18 @@ class PrerenderConfig {
 
   /// Builds a [PrerenderConfig] from a decoded map.
   factory PrerenderConfig.fromMap(Map<String, Object?> map) {
+    // `parity` may be a boolean shorthand (`parity: false`) or a mapping with
+    // `enabled`/`threshold`/`failOn`.
     final parity = map['parity'];
-    final parityMap = parity is Map
-        ? _toStringMap(parity)
-        : const <String, Object?>{};
+    bool? parityShorthand;
+    Map<String, Object?> parityMap = const <String, Object?>{};
+    if (parity is bool) {
+      parityShorthand = parity;
+    } else if (parity is Map) {
+      parityMap = _toStringMap(parity);
+    } else if (parity != null) {
+      throw const ConfigException('"parity" must be a boolean or a mapping.');
+    }
     return PrerenderConfig(
       buildDir: _string(map, 'buildDir') ?? 'build/web',
       outDir:
@@ -74,10 +83,11 @@ class PrerenderConfig {
       baseHref: _string(map, 'baseHref'),
       generateSitemap: _bool(map, 'sitemap') ?? true,
       includeAppScript: _bool(map, 'appScript') ?? true,
-      appScriptSrc: _string(map, 'appScriptSrc') ?? 'flutter_bootstrap.js',
-      parityCheck: _bool(parityMap, 'enabled') ?? true,
+      appScriptSrc: _string(map, 'appScriptSrc') ?? '/flutter_bootstrap.js',
+      parityCheck: parityShorthand ?? _bool(parityMap, 'enabled') ?? true,
       parityThreshold: _double(parityMap, 'threshold') ?? 0.9,
       failOnParity: _bool(parityMap, 'failOn') ?? false,
+      failOnEmpty: _bool(map, 'failOnEmpty') ?? false,
       waitMs: _int(map, 'waitMs') ?? 4000,
       port: _int(map, 'port') ?? 0,
       chromeExecutable:
@@ -123,6 +133,10 @@ class PrerenderConfig {
   /// Whether a suspicious parity report should make the run exit non-zero.
   final bool failOnParity;
 
+  /// Whether a route that recovers no content should make the run exit
+  /// non-zero.
+  final bool failOnEmpty;
+
   /// Extra milliseconds to wait after the semantics tree appears, giving the
   /// app time to finish laying out.
   final int waitMs;
@@ -153,6 +167,7 @@ class PrerenderConfig {
     bool? parityCheck,
     double? parityThreshold,
     bool? failOnParity,
+    bool? failOnEmpty,
     int? waitMs,
     int? port,
     String? chromeExecutable,
@@ -171,6 +186,7 @@ class PrerenderConfig {
       parityCheck: parityCheck ?? this.parityCheck,
       parityThreshold: parityThreshold ?? this.parityThreshold,
       failOnParity: failOnParity ?? this.failOnParity,
+      failOnEmpty: failOnEmpty ?? this.failOnEmpty,
       waitMs: waitMs ?? this.waitMs,
       port: port ?? this.port,
       chromeExecutable: chromeExecutable ?? this.chromeExecutable,

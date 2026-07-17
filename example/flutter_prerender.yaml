@@ -1,7 +1,8 @@
 # Example flutter_prerender configuration.
 #
-# Run from this directory after `flutter build web`:
-#   dart run flutter_prerender -c flutter_prerender.yaml
+# After `flutter build web`, run from this directory (once the tool is
+# activated with `dart pub global activate flutter_prerender`):
+#   flutter_prerender -c flutter_prerender.yaml
 buildDir: build/web
 out: build/prerendered
 baseUrl: https://coffee.example.com

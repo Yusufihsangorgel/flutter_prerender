@@ -87,6 +87,56 @@ dart run flutter_prerender -c flutter_prerender.yaml
 CLI flags override the config file. See `flutter_prerender --help` for the full
 list. A full example lives in [`example/`](example/).
 
+## Serving the output
+
+`build/prerendered/` holds one `index.html` per route plus `sitemap.xml`. It
+does not contain the app's JavaScript and wasm assets, so serve it alongside
+`build/web`, not instead of it. Two common topologies:
+
+**Overlay.** Lay the prerendered HTML over the build so each route's
+`index.html` is the crawlable one and every other asset comes from `build/web`:
+
+```sh
+cp -r build/web/. deploy/
+cp -r build/prerendered/. deploy/
+```
+
+Visitors with JavaScript boot the app from that same page (the generated HTML
+loads `/flutter_bootstrap.js` and removes the static fallback once the app is
+up); crawlers read the static content. This is why the default bootstrap `src`
+is the absolute `/flutter_bootstrap.js`; a relative path would 404 on a deep
+route like `/beans/kenya`.
+
+**Bot routing.** Serve the SPA to humans and the prerendered HTML to crawlers,
+keyed on the user agent. For nginx:
+
+```nginx
+map $http_user_agent $is_bot {
+  default 0;
+  ~*(googlebot|bingbot|duckduckbot|slurp|facebookexternalhit|twitterbot|linkedinbot|slackbot) 1;
+}
+
+server {
+  root /srv/build/web;
+
+  location / {
+    if ($is_bot) {
+      rewrite ^/(.*)$ /prerendered/$1/index.html last;
+    }
+    try_files $uri $uri/ /index.html;   # SPA fallback for humans
+  }
+
+  location /prerendered/ {
+    internal;
+    alias /srv/build/prerendered/;
+  }
+}
+```
+
+Because the static page loads the real app for JavaScript-capable clients, the
+overlay form serves both audiences without user-agent detection; bot routing
+keeps the human payload untouched at the cost of a routing rule.
+
 ## Getting good output
 
 The recovered structure is only as good as the app's semantics. An unannotated
@@ -103,18 +153,30 @@ Semantics(image: true, label: 'Alt text', child: ...); // -> <img alt>
 The app does not need to call `ensureSemantics()`. The tool turns the
 accessibility tree on from the outside, so no app source change is required.
 
-## Content parity and cloaking
+## Content parity
 
-Serving crawlers content a user cannot see is cloaking, and search engines
-penalise it. `flutter_prerender` builds the static HTML from the same
-accessibility tree the app renders, and after each page it runs a parity guard:
-it compares the generated body text with the text the app actually rendered and
-warns when the generated page contains words the user never sees. Pass
-`--fail-on-parity` to make that a hard error in CI.
+After building each page, `flutter_prerender` runs a parity guard. Be precise
+about what it does and does not check.
 
-Keep the content faithful and this stays within Google's guidance, which draws
-the line at "completely different" content and explicitly endorses prerendering
-canvas/WebGL. Use the guard, and do not hand-inject keywords into the output.
+The guard compares the generated HTML against Flutter's own accessibility text
+(the text the semantics tree exposes once accessibility is on), which is the
+only machine-readable text the engine gives you. It flags words that appear in
+the output but not in that text, so it catches extractor drift and hand-edited
+output. It cannot independently verify the painted canvas, because there is no
+separate visible-text source to compare against. True parity ultimately rests
+on Flutter's semantics matching the UI it paints, which is the same thing a
+screen reader depends on. Pass `--fail-on-parity` to turn a flag into a hard CI
+error.
+
+Image alt text is exempt from the check by design: it comes from an aria-label
+rather than visible body text, and describing a visible image is standard SEO,
+not injection.
+
+The practical rule: keep the recovered content faithful and do not hand-inject
+keywords. Serving crawlers content a user cannot see is cloaking, and search
+engines penalise it. Google draws the line at "completely different" content and
+explicitly endorses prerendering canvas/WebGL, so a faithful prerender stays
+within its guidance.
 
 ## Limits
 
@@ -135,9 +197,13 @@ This is a v0.1 with a deliberately narrow scope. Known limits:
 
 ## Compatibility
 
-Tested on Flutter 3.x web (CanvasKit and skwasm renderers). The behaviour
-depends on Flutter's semantics DOM, which has been stable across recent 3.x
-releases; it is not pinned to a specific build.
+Developed and tested against Flutter 3.41.2 (web, both the CanvasKit and skwasm
+renderers). Later 3.x releases were not exercised in this version.
+
+Flutter's semantics DOM is an engine-internal contract, not a public API. After
+a Flutter upgrade, re-verify: run the tool on your build and confirm the output
+still contains your headings and links. The `--fail-on-empty` flag makes a
+silent regression (no content recovered) a hard error in CI.
 
 ## License
 

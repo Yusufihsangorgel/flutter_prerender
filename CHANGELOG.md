@@ -11,6 +11,10 @@ Initial release.
 - Injects `<title>`, meta description, canonical, Open Graph, Twitter Card and
   optional JSON-LD per route.
 - Generates `sitemap.xml`.
-- Content-parity guard that warns (or fails, with `--fail-on-parity`) when the
-  generated HTML diverges from what the app renders.
+- Parity guard that compares the generated HTML against Flutter's own
+  accessibility text and warns (or fails, with `--fail-on-parity`) on injected
+  content.
+- Warnings for routes that recover no content (`--fail-on-empty` to make it
+  fatal) and for routes that duplicate another route's content.
 - YAML config file and command-line flags, with flags overriding the file.
+  Invalid numeric flags are rejected instead of silently ignored.

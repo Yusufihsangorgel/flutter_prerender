@@ -21,7 +21,7 @@ class HtmlBuilder {
   const HtmlBuilder({
     this.lang = 'en',
     this.includeAppScript = true,
-    this.appScriptSrc = 'flutter_bootstrap.js',
+    this.appScriptSrc = '/flutter_bootstrap.js',
     this.baseHref,
   });
 

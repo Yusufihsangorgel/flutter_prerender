@@ -6,7 +6,7 @@
 /// * [SemanticsExtractor]: recovers [ContentNode]s from a semantics DOM.
 /// * [HtmlBuilder]: serialises content and metadata to static HTML.
 /// * [buildSitemap]: emits `sitemap.xml`.
-/// * [ParityGuard]: guards against cloaking.
+/// * [ParityGuard]: checks generated text against Flutter's semantics text.
 /// * [PageCapturer] / [PuppeteerCapturer]: load a route in headless Chrome.
 /// * [PrerenderEngine]: orchestrates the full run.
 ///

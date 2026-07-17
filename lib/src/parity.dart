@@ -1,10 +1,15 @@
-/// The result of comparing prerendered text against the text the Flutter app
-/// actually renders.
+/// The result of comparing the prerendered text against Flutter's own
+/// accessibility text.
 ///
-/// A responsible prerender must expose the *same* content to crawlers that a
-/// human sees. Injecting crawler-only text is cloaking, which search engines
-/// penalise. [ParityReport] quantifies the difference so the tool can warn (or
-/// fail) when the generated HTML diverges from the app.
+/// The prerender is built from Flutter's semantics tree, and this report
+/// compares it against the text that same tree exposes as
+/// `document.body.innerText` once accessibility is enabled, the only
+/// machine-readable text the engine provides. It therefore catches extractor
+/// drift and hand-edited output, but it cannot independently inspect the
+/// painted canvas: there is no separate visible-text source to compare
+/// against. A large [injectionRatio] means the generated HTML contains words
+/// the accessibility text does not, which is the signal for injected,
+/// crawler-only content.
 class ParityReport {
   /// Creates a parity report. Prefer [ParityGuard.compare] over calling this
   /// directly.
