@@ -1,3 +1,10 @@
+## 0.1.2
+
+- Docs: make clear up front that this is a command-line tool you run against a
+  `flutter build web` output, not a package you add to an app's dependencies.
+  Also clarifies why pub.dev lists the platforms the tool runs on (Linux, macOS,
+  Windows) rather than web.
+
 ## 0.1.1
 
 - Docs: tightened the README wording and visuals.

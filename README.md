@@ -4,6 +4,11 @@
 
 Prerender a Flutter web app to static, crawlable HTML for SEO.
 
+It is a **command-line tool**: you run it against a `flutter build web` output on
+your machine or in CI. It is not a package you add to your app's dependencies, so
+pub.dev lists it under the platforms it *runs* on (Linux, macOS, Windows), not the
+web app it targets.
+
 `flutter_prerender` loads each route of a `flutter build web` output in headless
 Chrome, enables Flutter's accessibility tree, and writes a static HTML document
 per route: real `<h1>`/`<p>`/`<a>`, plus `<title>`, meta description, Open
