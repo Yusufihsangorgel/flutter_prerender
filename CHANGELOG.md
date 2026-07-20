@@ -1,3 +1,21 @@
+## 0.2.0
+
+- Add `--robots`, which writes a `robots.txt` declaring the generated sitemap.
+  The tool produced a `sitemap.xml` that nothing pointed at; the `Sitemap:`
+  directive is the documented way to announce one and is what webmaster tools
+  and non-Google crawlers read. The line is only written when a sitemap was
+  actually produced, so a crawler is never sent to a URL that would 404.
+- The flag is off by default and never replaces an existing `robots.txt`. A
+  project that ships `web/robots.txt` has it copied into the build, and
+  silently overwriting crawl rules somebody wrote on purpose would be a worse
+  bug than not writing the file; the existing one is left alone and the run
+  reports it as a warning.
+- Fix `dart analyze` reporting dozens of errors on a clean checkout. The
+  example is a Flutter app, so the package's pure-Dart analyzer could not
+  resolve any widget in it and called every one undefined. It is excluded from
+  the package's analysis and still checked on its own terms with
+  `cd example && flutter analyze`.
+
 ## 0.1.2
 
 - Docs: make clear up front that this is a command-line tool you run against a

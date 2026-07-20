@@ -56,6 +56,7 @@ void main() {
         routes: const [RouteSpec('/')],
         chromeExecutable: chrome,
         waitMs: 4000,
+        generateRobots: true,
       );
       final server = await StaticServer.start(buildDir);
       final capturer = PuppeteerCapturer(
@@ -79,6 +80,33 @@ void main() {
         expect(route.parity?.isSuspicious, isFalse);
 
         expect(result.sitemapPath, isNotNull);
+
+        // robots.txt is written and points at the sitemap that was actually
+        // produced, so a crawler is told where to look.
+        expect(result.robotsPath, isNotNull);
+        final robots = File(result.robotsPath!).readAsStringSync();
+        expect(robots, contains('User-agent: *'));
+        expect(
+          robots,
+          contains('Sitemap: https://coffee.example.com/sitemap.xml'),
+        );
+
+        // Running again over an output that already has a robots.txt must
+        // leave it alone: a project that ships web/robots.txt has its crawl
+        // rules copied into the build, and replacing them would be a worse
+        // bug than not writing the file.
+        File(p.join(outDir.path, 'robots.txt'))
+            .writeAsStringSync('User-agent: *\nDisallow: /private\n');
+        final second = await engine.run(server.baseUri);
+        expect(second.robotsPath, isNull);
+        expect(
+          File(p.join(outDir.path, 'robots.txt')).readAsStringSync(),
+          contains('Disallow: /private'),
+        );
+        expect(
+          second.runWarnings.any((w) => w.contains('robots.txt already')),
+          isTrue,
+        );
       } finally {
         await capturer.close();
         await server.close();

@@ -53,6 +53,11 @@ ArgParser buildParser() {
       help: 'Minimum content similarity before a page is flagged (0.0-1.0).',
     )
     ..addFlag('sitemap', help: 'Write sitemap.xml (needs --base-url).')
+    ..addFlag(
+      'robots',
+      help: 'Write robots.txt pointing at the sitemap. Never overwrites an '
+          'existing robots.txt.',
+    )
     ..addFlag('app-script', help: 'Include the Flutter bootstrap script.')
     ..addFlag('parity', help: 'Run the content-parity guard.')
     ..addFlag(
@@ -170,6 +175,7 @@ Future<PrerenderConfig> _resolveConfig(ArgResults results) async {
     port: _intOption(results, 'port'),
     waitMs: _intOption(results, 'wait'),
     parityThreshold: _doubleOption(results, 'parity-threshold'),
+    generateRobots: results.wasParsed('robots') ? results.flag('robots') : null,
     generateSitemap: results.wasParsed('sitemap')
         ? results.flag('sitemap')
         : null,
@@ -252,6 +258,7 @@ void _printPlan(
   out.writeln('  output dir:  ${config.outDir}');
   out.writeln('  base url:    ${config.baseUrl ?? '(none)'}');
   out.writeln('  sitemap:     ${config.generateSitemap}');
+  out.writeln('  robots:      ${config.generateRobots}');
   out.writeln('  app script:  ${config.includeAppScript}');
   out.writeln(
     '  parity:      ${config.parityCheck} '

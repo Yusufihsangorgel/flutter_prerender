@@ -7,6 +7,7 @@ import 'config.dart';
 import 'content_node.dart';
 import 'html_builder.dart';
 import 'parity.dart';
+import 'robots.dart';
 import 'semantics_extractor.dart';
 import 'sitemap.dart';
 
@@ -51,6 +52,7 @@ class PrerenderResult {
   const PrerenderResult({
     required this.routes,
     this.sitemapPath,
+    this.robotsPath,
     this.runWarnings = const <String>[],
   });
 
@@ -59,6 +61,10 @@ class PrerenderResult {
 
   /// The absolute path of the written `sitemap.xml`, or `null` if none.
   final String? sitemapPath;
+
+  /// The absolute path of the written `robots.txt`, or `null` if none was
+  /// written, including when one was already there.
+  final String? robotsPath;
 
   /// Warnings that concern the run as a whole rather than a single route.
   final List<String> runWarnings;
@@ -199,9 +205,33 @@ class PrerenderEngine {
       log?.call('Wrote ${sitemapFile.path}');
     }
 
+    String? robotsPath;
+    if (config.generateRobots) {
+      final robotsFile = File(p.join(outDir.path, 'robots.txt'));
+      if (robotsFile.existsSync()) {
+        // A project that ships web/robots.txt has it copied into the build.
+        // Replacing it would throw away crawl rules the author wrote on
+        // purpose, so leave it and say so.
+        runWarnings.add(
+          'robots.txt already exists in the output; leaving it untouched',
+        );
+      } else {
+        robotsFile.writeAsStringSync(
+          buildRobotsTxt(
+            sitemapUrl: sitemapPath != null && config.baseUrl != null
+                ? joinUrl(config.baseUrl!, '/sitemap.xml')
+                : null,
+          ),
+        );
+        robotsPath = robotsFile.path;
+        log?.call('Wrote ${robotsFile.path}');
+      }
+    }
+
     return PrerenderResult(
       routes: results,
       sitemapPath: sitemapPath,
+      robotsPath: robotsPath,
       runWarnings: runWarnings,
     );
   }

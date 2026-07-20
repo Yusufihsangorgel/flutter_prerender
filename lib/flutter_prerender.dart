@@ -22,6 +22,7 @@ export 'src/engine.dart';
 export 'src/exceptions.dart';
 export 'src/html_builder.dart';
 export 'src/parity.dart';
+export 'src/robots.dart';
 export 'src/route_meta.dart';
 export 'src/routes.dart';
 export 'src/semantics_extractor.dart';

@@ -1,6 +1,13 @@
 include: package:lints/recommended.yaml
 
 analyzer:
+  # The example is a Flutter app with its own pubspec and analysis options, so
+  # the package's pure-Dart analyzer cannot resolve Flutter's symbols there and
+  # reports every widget as undefined. Anyone who cloned this and ran
+  # `dart analyze` saw dozens of errors in a package that is in fact clean.
+  # Analyse the example on its own terms instead: `cd example && flutter analyze`.
+  exclude:
+    - example/**
   language:
     strict-casts: true
     strict-inference: true

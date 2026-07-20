@@ -96,6 +96,29 @@ dart run flutter_prerender -c flutter_prerender.yaml
 CLI flags override the config file. See `flutter_prerender --help` for the full
 list. A full example lives in [`example/`](example/).
 
+## robots.txt
+
+A sitemap nothing points at is half the job. Pass `--robots` and a `robots.txt`
+is written next to the sitemap, declaring it:
+
+```sh
+dart run flutter_prerender --base-url https://example.com --sitemap --robots
+```
+
+```
+User-agent: *
+Allow: /
+
+Sitemap: https://example.com/sitemap.xml
+```
+
+It is off by default and never replaces a `robots.txt` that is already in the
+output. A project that ships `web/robots.txt` has it copied into the build, and
+overwriting somebody's crawl rules would be a worse bug than not writing the
+file at all; the existing one is left alone and the run reports it. The
+`Sitemap:` line only appears when a sitemap was actually produced, so crawlers
+are never sent to a URL that would 404.
+
 ## Serving the output
 
 `build/prerendered/` holds one `index.html` per route plus `sitemap.xml`. It

@@ -29,6 +29,7 @@ class PrerenderConfig {
     this.routes = const <RouteSpec>[],
     this.defaults = const RouteMeta(),
     this.generateSitemap = true,
+    this.generateRobots = false,
     this.includeAppScript = true,
     this.appScriptSrc = '/flutter_bootstrap.js',
     this.parityCheck = true,
@@ -82,6 +83,7 @@ class PrerenderConfig {
       lang: _string(map, 'lang') ?? 'en',
       baseHref: _string(map, 'baseHref'),
       generateSitemap: _bool(map, 'sitemap') ?? true,
+      generateRobots: _bool(map, 'robots') ?? false,
       includeAppScript: _bool(map, 'appScript') ?? true,
       appScriptSrc: _string(map, 'appScriptSrc') ?? '/flutter_bootstrap.js',
       parityCheck: parityShorthand ?? _bool(parityMap, 'enabled') ?? true,
@@ -117,6 +119,15 @@ class PrerenderConfig {
 
   /// Whether to write a `sitemap.xml` (requires [baseUrl]).
   final bool generateSitemap;
+
+  /// Whether to write a `robots.txt` that points crawlers at the sitemap.
+  ///
+  /// Off by default, and never overwrites a `robots.txt` that is already in
+  /// the output: a Flutter project that ships `web/robots.txt` has it copied
+  /// into the build, and silently replacing someone's crawl rules would be a
+  /// worse bug than not writing the file. An existing file is left alone and
+  /// reported as a warning instead.
+  final bool generateRobots;
 
   /// Whether the generated pages load the original Flutter app.
   final bool includeAppScript;
@@ -163,6 +174,7 @@ class PrerenderConfig {
     String? baseUrl,
     List<RouteSpec>? routes,
     bool? generateSitemap,
+    bool? generateRobots,
     bool? includeAppScript,
     bool? parityCheck,
     double? parityThreshold,
@@ -181,6 +193,7 @@ class PrerenderConfig {
       routes: routes ?? this.routes,
       defaults: defaults,
       generateSitemap: generateSitemap ?? this.generateSitemap,
+      generateRobots: generateRobots ?? this.generateRobots,
       includeAppScript: includeAppScript ?? this.includeAppScript,
       appScriptSrc: appScriptSrc,
       parityCheck: parityCheck ?? this.parityCheck,
