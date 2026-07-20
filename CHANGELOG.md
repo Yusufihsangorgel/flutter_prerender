@@ -1,3 +1,9 @@
+## 0.2.1
+
+- Declare the diagram in `pubspec.yaml` so pub.dev renders it on the package
+  page. It was already in the repository and the README, but pub.dev shows only
+  what the `screenshots:` field points at.
+
 ## 0.2.0
 
 - Add `--robots`, which writes a `robots.txt` declaring the generated sitemap.
