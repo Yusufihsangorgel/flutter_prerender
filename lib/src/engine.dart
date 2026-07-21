@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
@@ -8,6 +9,7 @@ import 'content_node.dart';
 import 'html_builder.dart';
 import 'parity.dart';
 import 'robots.dart';
+import 'routes.dart';
 import 'semantics_extractor.dart';
 import 'sitemap.dart';
 
@@ -128,75 +130,59 @@ class PrerenderEngine {
 
     final results = <RouteResult>[];
     final signatureToRoute = <String, String>{};
-    for (final spec in config.routes) {
-      log?.call('Prerendering ${spec.path} ...');
-      final captured = await capturer.capture(baseUri.resolve(spec.path));
-      final nodes = extractor.extract(captured.semanticsHtml);
-      final meta = spec.meta.merge(config.defaults);
-      final pageUrl = config.baseUrl == null
-          ? null
-          : joinUrl(config.baseUrl!, spec.path);
-      final html = _builder.build(
-        nodes: nodes,
-        meta: meta,
-        fallbackTitle: captured.title,
-        pageUrl: pageUrl,
-      );
 
-      final warnings = <String>[];
-      ParityReport? parity;
-      if (nodes.isEmpty) {
-        warnings.add(
-          'no crawlable content recovered; check --build-dir and that this '
-          'route renders text',
+    final seeds = config.routes.isEmpty
+        ? const <RouteSpec>[RouteSpec('/')]
+        : config.routes;
+
+    if (config.crawl) {
+      // Seeds fan out into further routes by following the same-origin links
+      // already recovered from each page, bounded by config.maxPages.
+      final queue = Queue<RouteSpec>.of(seeds);
+      final known = <String>{for (final spec in seeds) spec.path};
+      final visited = <String>{};
+      while (queue.isNotEmpty && results.length < config.maxPages) {
+        final spec = queue.removeFirst();
+        if (!visited.add(spec.path)) continue;
+        final nodes = await _renderRoute(
+          spec,
+          baseUri,
+          outDir,
+          signatureToRoute,
+          results,
+          log,
         );
-      } else {
-        final signature = _signature(nodes);
-        final firstSeen = signatureToRoute[signature];
-        if (firstSeen != null) {
-          warnings.add(
-            'produced the same content as $firstSeen; the app may not be '
-            'routing on the path',
-          );
-        } else {
-          signatureToRoute[signature] = spec.path;
+        final discovered = discoverRoutes(
+          nodes.whereType<LinkContent>().map((node) => node.href),
+          known: known,
+          limit: config.maxPages - known.length,
+          origin: config.baseUrl,
+        );
+        for (final path in discovered) {
+          known.add(path);
+          queue.add(RouteSpec(path));
         }
       }
-
-      if (config.parityCheck) {
-        parity = _guard.compare(captured.renderedText, _bodyText(nodes));
-        if (parity.isSuspicious) {
-          warnings.add(
-            'parity: similarity ${parity.similarity.toStringAsFixed(2)}, '
-            '${parity.injectedWords.length} injected word(s)',
-          );
-        }
+    } else {
+      for (final spec in config.routes) {
+        await _renderRoute(
+          spec,
+          baseUri,
+          outDir,
+          signatureToRoute,
+          results,
+          log,
+        );
       }
-
-      for (final warning in warnings) {
-        log?.call('  warning: $warning');
-      }
-
-      final file = _writeRoute(outDir.path, spec.path, html);
-      results.add(
-        RouteResult(
-          path: spec.path,
-          outputPath: file.path,
-          nodeCount: nodes.length,
-          byteCount: file.lengthSync(),
-          parity: parity,
-          warnings: warnings,
-        ),
-      );
     }
 
     String? sitemapPath;
     if (config.generateSitemap &&
         config.baseUrl != null &&
-        config.routes.isNotEmpty) {
+        results.isNotEmpty) {
       final xml = buildSitemap(
-        config.routes.map(
-          (spec) => SitemapEntry(joinUrl(config.baseUrl!, spec.path)),
+        results.map(
+          (route) => SitemapEntry(joinUrl(config.baseUrl!, route.path)),
         ),
       );
       final sitemapFile = File(p.join(outDir.path, 'sitemap.xml'))
@@ -234,6 +220,79 @@ class PrerenderEngine {
       robotsPath: robotsPath,
       runWarnings: runWarnings,
     );
+  }
+
+  /// Prerenders a single [spec]: captures the page, recovers content, builds
+  /// and writes the HTML, records the result, and returns the recovered nodes
+  /// so a crawl can follow their links.
+  Future<List<ContentNode>> _renderRoute(
+    RouteSpec spec,
+    Uri baseUri,
+    Directory outDir,
+    Map<String, String> signatureToRoute,
+    List<RouteResult> results,
+    void Function(String)? log,
+  ) async {
+    log?.call('Prerendering ${spec.path} ...');
+    final captured = await capturer.capture(baseUri.resolve(spec.path));
+    final nodes = extractor.extract(captured.semanticsHtml);
+    final meta = spec.meta.merge(config.defaults);
+    final pageUrl = config.baseUrl == null
+        ? null
+        : joinUrl(config.baseUrl!, spec.path);
+    final html = _builder.build(
+      nodes: nodes,
+      meta: meta,
+      fallbackTitle: captured.title,
+      pageUrl: pageUrl,
+    );
+
+    final warnings = <String>[];
+    ParityReport? parity;
+    if (nodes.isEmpty) {
+      warnings.add(
+        'no crawlable content recovered; check --build-dir and that this '
+        'route renders text',
+      );
+    } else {
+      final signature = _signature(nodes);
+      final firstSeen = signatureToRoute[signature];
+      if (firstSeen != null) {
+        warnings.add(
+          'produced the same content as $firstSeen; the app may not be '
+          'routing on the path',
+        );
+      } else {
+        signatureToRoute[signature] = spec.path;
+      }
+    }
+
+    if (config.parityCheck) {
+      parity = _guard.compare(captured.renderedText, _bodyText(nodes));
+      if (parity.isSuspicious) {
+        warnings.add(
+          'parity: similarity ${parity.similarity.toStringAsFixed(2)}, '
+          '${parity.injectedWords.length} injected word(s)',
+        );
+      }
+    }
+
+    for (final warning in warnings) {
+      log?.call('  warning: $warning');
+    }
+
+    final file = _writeRoute(outDir.path, spec.path, html);
+    results.add(
+      RouteResult(
+        path: spec.path,
+        outputPath: file.path,
+        nodeCount: nodes.length,
+        byteCount: file.lengthSync(),
+        parity: parity,
+        warnings: warnings,
+      ),
+    );
+    return nodes;
   }
 
   List<String> _preflightWarnings() {

@@ -45,6 +45,10 @@ ArgParser buildParser() {
       'base-url',
       help: 'Public site origin, e.g. https://example.com.',
     )
+    ..addOption(
+      'max-pages',
+      help: 'Maximum pages to prerender when crawling (default 100).',
+    )
     ..addOption('port', help: 'Static server port (0 selects a free port).')
     ..addOption('chrome', help: 'Path to a Chrome/Chromium executable.')
     ..addOption('wait', help: 'Extra settle wait, in milliseconds.')
@@ -52,10 +56,18 @@ ArgParser buildParser() {
       'parity-threshold',
       help: 'Minimum content similarity before a page is flagged (0.0-1.0).',
     )
+    ..addFlag(
+      'crawl',
+      negatable: false,
+      help:
+          'Discover routes by following in-page links from the seeds, '
+          'instead of prerendering only the listed routes.',
+    )
     ..addFlag('sitemap', help: 'Write sitemap.xml (needs --base-url).')
     ..addFlag(
       'robots',
-      help: 'Write robots.txt pointing at the sitemap. Never overwrites an '
+      help:
+          'Write robots.txt pointing at the sitemap. Never overwrites an '
           'existing robots.txt.',
     )
     ..addFlag('app-script', help: 'Include the Flutter bootstrap script.')
@@ -120,10 +132,10 @@ Future<int> runCli(
 
   try {
     final config = await _resolveConfig(results);
-    if (config.routes.isEmpty) {
+    if (config.routes.isEmpty && !config.crawl) {
       throw const ConfigException(
-        'No routes to prerender. Provide --routes, or a "routes:" list in the '
-        'config file.',
+        'No routes to prerender. Provide --routes, a "routes:" list in the '
+        'config file, or --crawl to discover routes from links.',
       );
     }
     return await _execute(
@@ -171,6 +183,8 @@ Future<PrerenderConfig> _resolveConfig(ArgResults results) async {
     outDir: results.option('out'),
     baseUrl: results.option('base-url'),
     routes: routes,
+    crawl: results.wasParsed('crawl') ? results.flag('crawl') : null,
+    maxPages: _intOption(results, 'max-pages'),
     chromeExecutable: results.option('chrome'),
     port: _intOption(results, 'port'),
     waitMs: _intOption(results, 'wait'),
@@ -257,6 +271,10 @@ void _printPlan(
   out.writeln('  build dir:   ${config.buildDir}');
   out.writeln('  output dir:  ${config.outDir}');
   out.writeln('  base url:    ${config.baseUrl ?? '(none)'}');
+  out.writeln(
+    '  crawl:       ${config.crawl}'
+    '${config.crawl ? ' (max ${config.maxPages} pages)' : ''}',
+  );
   out.writeln('  sitemap:     ${config.generateSitemap}');
   out.writeln('  robots:      ${config.generateRobots}');
   out.writeln('  app script:  ${config.includeAppScript}');

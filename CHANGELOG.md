@@ -1,3 +1,17 @@
+## 0.3.0
+
+- Add `--crawl`, which discovers routes by following the in-page links the
+  engine already recovers instead of prerendering only the listed routes. The
+  routes you pass (or `/` when you pass none) seed a work queue, every
+  same-origin link found on a page is normalised and enqueued if it has not
+  been seen, and the crawl stops at `--max-pages` (default 100). Off-site
+  links, `mailto:`/`tel:`, and bare fragments are skipped; an absolute URL is
+  followed only when its origin matches `--base-url`. Without `--crawl` nothing
+  changes: the tool still prerenders exactly the routes you list.
+- The sitemap now lists the pages that were actually prerendered rather than
+  the configured route list, so a crawl's discovered pages are included. For a
+  fixed route list the output is the same as before.
+
 ## 0.2.2
 
 - Shorten the screenshot description. pub.dev accepts up to 200 characters but

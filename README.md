@@ -96,6 +96,25 @@ dart run flutter_prerender -c flutter_prerender.yaml
 CLI flags override the config file. See `flutter_prerender --help` for the full
 list. A full example lives in [`example/`](example/).
 
+## Crawling
+
+Listing every route by hand does not scale. Pass `--crawl` and the tool starts
+from your routes (or `/` if you give none), then follows the in-page links it
+already recovers from each page. Every same-origin link is normalised and
+prerendered if it has not been seen yet:
+
+```sh
+dart run flutter_prerender --build-dir build/web --crawl \
+  --out build/prerendered --base-url https://example.com
+```
+
+`--max-pages` bounds the run (default 100). Off-site links, `mailto:`/`tel:`
+links, and bare `#fragment` links are skipped. An absolute URL is followed only
+when its origin matches `--base-url`; relative links are always in scope. The
+crawl only finds pages you can reach by clicking, so a route with no link
+pointing at it still needs to be listed. Without `--crawl` the tool prerenders
+exactly the routes you name and nothing else.
+
 ## robots.txt
 
 A sitemap nothing points at is half the job. Pass `--robots` and a `robots.txt`

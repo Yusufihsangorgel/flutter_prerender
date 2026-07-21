@@ -27,6 +27,8 @@ class PrerenderConfig {
     this.outDir = 'build/prerendered',
     this.baseUrl,
     this.routes = const <RouteSpec>[],
+    this.crawl = false,
+    this.maxPages = 100,
     this.defaults = const RouteMeta(),
     this.generateSitemap = true,
     this.generateRobots = false,
@@ -94,6 +96,8 @@ class PrerenderConfig {
       port: _int(map, 'port') ?? 0,
       chromeExecutable:
           _string(map, 'chrome') ?? _string(map, 'chromeExecutable'),
+      crawl: _bool(map, 'crawl') ?? false,
+      maxPages: _int(map, 'maxPages') ?? 100,
       defaults: map['defaults'] is Map
           ? RouteMeta.fromMap(_toStringMap(map['defaults'] as Map))
           : const RouteMeta(),
@@ -111,8 +115,21 @@ class PrerenderConfig {
   /// canonical URLs, `og:url` and the sitemap.
   final String? baseUrl;
 
-  /// The routes to prerender.
+  /// The routes to prerender. In crawl mode these are the seeds; an empty list
+  /// seeds the crawl from `/`.
   final List<RouteSpec> routes;
+
+  /// Whether to discover further routes by following the in-page links the
+  /// engine already recovers, instead of prerendering only [routes].
+  ///
+  /// Off by default. When on, [routes] (or `/` when empty) seed a work queue,
+  /// and every same-origin link found on a prerendered page is enqueued if it
+  /// has not been seen, up to [maxPages].
+  final bool crawl;
+
+  /// The maximum number of pages a crawl will prerender, counting the seeds.
+  /// Ignored when [crawl] is off.
+  final int maxPages;
 
   /// Document-wide metadata defaults, merged into every route.
   final RouteMeta defaults;
@@ -173,6 +190,8 @@ class PrerenderConfig {
     String? outDir,
     String? baseUrl,
     List<RouteSpec>? routes,
+    bool? crawl,
+    int? maxPages,
     bool? generateSitemap,
     bool? generateRobots,
     bool? includeAppScript,
@@ -191,6 +210,8 @@ class PrerenderConfig {
       outDir: outDir ?? this.outDir,
       baseUrl: baseUrl ?? this.baseUrl,
       routes: routes ?? this.routes,
+      crawl: crawl ?? this.crawl,
+      maxPages: maxPages ?? this.maxPages,
       defaults: defaults,
       generateSitemap: generateSitemap ?? this.generateSitemap,
       generateRobots: generateRobots ?? this.generateRobots,
