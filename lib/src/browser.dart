@@ -4,7 +4,7 @@ import 'exceptions.dart';
 
 /// The raw material recovered from one loaded route: the document title, the
 /// serialised Flutter semantics DOM, and the app's rendered text.
-class CapturedPage {
+final class CapturedPage {
   /// Creates a [CapturedPage].
   const CapturedPage({
     required this.title,
@@ -37,7 +37,7 @@ abstract interface class PageCapturer {
 }
 
 /// A [PageCapturer] backed by `package:puppeteer` and headless Chrome.
-class PuppeteerCapturer implements PageCapturer {
+final class PuppeteerCapturer implements PageCapturer {
   /// Creates a capturer.
   ///
   /// [executablePath] points at a Chrome/Chromium binary; when `null`,

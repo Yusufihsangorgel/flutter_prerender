@@ -5,7 +5,7 @@ import 'route_meta.dart';
 import 'routes.dart';
 
 /// A route to prerender together with its per-route SEO metadata.
-class RouteSpec {
+final class RouteSpec {
   /// Creates a route spec for [path] with optional [meta].
   const RouteSpec(this.path, {this.meta = const RouteMeta()});
 
@@ -20,7 +20,7 @@ class RouteSpec {
 ///
 /// Build a [PrerenderConfig] from a YAML file with [PrerenderConfig.fromYaml],
 /// then apply command-line overrides with [copyWith].
-class PrerenderConfig {
+final class PrerenderConfig {
   /// Creates a [PrerenderConfig]. All parameters have sensible defaults.
   const PrerenderConfig({
     this.buildDir = 'build/web',
@@ -155,7 +155,8 @@ class PrerenderConfig {
   /// Whether to run the content-parity guard after building each page.
   final bool parityCheck;
 
-  /// Minimum acceptable content similarity before a page is flagged.
+  /// Injection tolerance for the parity guard: a page is flagged when its
+  /// injection ratio exceeds `1 - parityThreshold`. Not a similarity gate.
   final double parityThreshold;
 
   /// Whether a suspicious parity report should make the run exit non-zero.

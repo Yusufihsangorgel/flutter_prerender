@@ -15,7 +15,7 @@ import 'content_node.dart';
 ///
 /// The class is deliberately free of any browser dependency: it operates on a
 /// plain HTML string, which makes the recovery logic fully unit-testable.
-class SemanticsExtractor {
+final class SemanticsExtractor {
   /// Creates a semantics extractor.
   ///
   /// [ignoredLabels] lists text values that are engine chrome rather than app

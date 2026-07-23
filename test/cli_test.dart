@@ -63,6 +63,18 @@ void main() {
     expect(out.toString(), contains('flutter_prerender $packageVersion'));
   });
 
+  test('packageVersion matches pubspec.yaml', () {
+    // The constant is hand-maintained; this fails the build if a release bumps
+    // pubspec but forgets it, which is how it silently sat at 0.1.0 for three
+    // releases.
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+    final declared = RegExp(r'^version:\s*(.+)$', multiLine: true)
+        .firstMatch(pubspec)!
+        .group(1)!
+        .trim();
+    expect(packageVersion, declared);
+  });
+
   test('an unknown flag exits 64', () async {
     final code = await runCli(
       ['--nope'],

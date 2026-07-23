@@ -16,7 +16,7 @@ import 'route_meta.dart';
 /// dynamic-rendering pattern that Google documents as an accepted way to make
 /// canvas/WebGL content indexable. It is not cloaking, provided the static
 /// text matches what the app renders (see the content-parity guard).
-class HtmlBuilder {
+final class HtmlBuilder {
   /// Creates an HTML builder.
   const HtmlBuilder({
     this.lang = 'en',

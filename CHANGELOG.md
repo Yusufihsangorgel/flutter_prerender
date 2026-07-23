@@ -1,3 +1,28 @@
+## 1.0.0
+
+First stable release. From here the public API follows semantic versioning: a
+breaking change will not land without a major-version bump.
+
+- Seal the 20 leaf classes that make up the public surface (`PrerenderConfig`,
+  `PrerenderResult`, `RouteSpec`, the exception types, and the rest) with
+  `final`. They are meant to be constructed and read, not extended, and nothing
+  in the package or its tests subtypes them. This keeps the rest of 1.x
+  additive: `PrerenderResult` gained `failedRoutes` in 0.3.1 and
+  `PrerenderConfig` grows fields most minors, and each such addition would break
+  an external `implements`. `PageCapturer` stays an open interface, because
+  faking it is how the pipeline is tested, `ContentNode` stays `sealed` with
+  its four `final` variants, and `PrerenderException` stays open as an
+  extensible base.
+- Correct the documented meaning of `parityThreshold`. Its field and help text
+  called it a minimum acceptable content similarity, but the guard flags on the
+  injection ratio: a page is suspicious when more than `1 - threshold` of its
+  words were never shown, and similarity never drives the decision. A prerender
+  that faithfully covers part of a page has low similarity and is not flagged.
+  The docs now say what the code does, before 1.0.0 freezes the wrong contract.
+- Fix `--version`, which printed `0.1.0` in every release since 0.1.0 because a
+  hand-maintained constant was never bumped. It is correct now, and a test
+  reads `pubspec.yaml` and fails if the two ever drift again.
+
 ## 0.3.2
 
 - Fix a route being able to write its `index.html` outside the output
@@ -80,8 +105,6 @@
 ## 0.1.1
 
 - Docs: tightened the README wording and visuals.
-
-# Changelog
 
 ## 0.1.0
 

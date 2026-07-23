@@ -10,8 +10,9 @@ import 'exceptions.dart';
 import 'routes.dart';
 import 'static_server.dart';
 
-/// The published version of the package. Kept in sync with `pubspec.yaml`.
-const String packageVersion = '0.1.0';
+/// The published version of the package. A test in `test/cli_test.dart`
+/// reads `pubspec.yaml` and fails if this drifts from it.
+const String packageVersion = '1.0.0';
 
 /// The default config file name looked up in the working directory.
 const String defaultConfigFile = 'flutter_prerender.yaml';
@@ -54,7 +55,8 @@ ArgParser buildParser() {
     ..addOption('wait', help: 'Extra settle wait, in milliseconds.')
     ..addOption(
       'parity-threshold',
-      help: 'Minimum content similarity before a page is flagged (0.0-1.0).',
+      help: 'Injection tolerance: flag a page when more than (1 - this) of '
+          'its words were never shown (0.0-1.0).',
     )
     ..addFlag(
       'crawl',

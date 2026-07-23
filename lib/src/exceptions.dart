@@ -15,7 +15,7 @@ class PrerenderException implements Exception {
 }
 
 /// Thrown when a configuration file or route list cannot be parsed.
-class ConfigException extends PrerenderException {
+final class ConfigException extends PrerenderException {
   /// Creates a [ConfigException] with a human-readable [message].
   const ConfigException(super.message);
 
@@ -24,7 +24,7 @@ class ConfigException extends PrerenderException {
 }
 
 /// Thrown when the Flutter web build directory is missing or incomplete.
-class BuildNotFoundException extends PrerenderException {
+final class BuildNotFoundException extends PrerenderException {
   /// Creates a [BuildNotFoundException] with a human-readable [message].
   const BuildNotFoundException(super.message);
 
@@ -34,7 +34,7 @@ class BuildNotFoundException extends PrerenderException {
 
 /// Thrown when the headless browser cannot be launched (for example, when no
 /// Chrome/Chromium executable can be found or downloaded).
-class BrowserLaunchException extends PrerenderException {
+final class BrowserLaunchException extends PrerenderException {
   /// Creates a [BrowserLaunchException] with a human-readable [message].
   const BrowserLaunchException(super.message);
 
@@ -44,7 +44,7 @@ class BrowserLaunchException extends PrerenderException {
 
 /// Thrown when a route cannot be captured, for example when the page never
 /// produces a Flutter semantics tree within the configured timeout.
-class RouteCaptureException extends PrerenderException {
+final class RouteCaptureException extends PrerenderException {
   /// Creates a [RouteCaptureException] for [route] with a human-readable
   /// [message].
   const RouteCaptureException(this.route, String message) : super(message);

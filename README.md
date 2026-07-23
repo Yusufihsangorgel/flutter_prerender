@@ -218,7 +218,7 @@ Google endorses prerendering canvas/WebGL as long as the content is not
 
 ## Limits
 
-This is a v0.1 with a deliberately narrow scope. Known limits:
+The scope is deliberately narrow. Known limits:
 
 - **Static snapshot.** Output reflects the app at build time. Content that
   changes at runtime (live data, per-user views) is not re-prerendered until

@@ -1,5 +1,5 @@
 /// A single `<url>` entry in a sitemap.
-class SitemapEntry {
+final class SitemapEntry {
   /// Creates a sitemap entry for the absolute URL [loc].
   const SitemapEntry(this.loc, {this.lastmod, this.changefreq, this.priority});
 

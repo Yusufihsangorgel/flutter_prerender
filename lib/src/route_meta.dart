@@ -2,7 +2,7 @@
 ///
 /// Any field left `null` falls back to the corresponding value from the
 /// document defaults (see [merge]).
-class RouteMeta {
+final class RouteMeta {
   /// Creates a [RouteMeta]. All fields are optional.
   const RouteMeta({
     this.title,

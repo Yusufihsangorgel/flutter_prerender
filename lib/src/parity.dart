@@ -10,7 +10,7 @@
 /// against. A large [injectionRatio] means the generated HTML contains words
 /// the accessibility text does not, which is the signal for injected,
 /// crawler-only content.
-class ParityReport {
+final class ParityReport {
   /// Creates a parity report. Prefer [ParityGuard.compare] over calling this
   /// directly.
   const ParityReport({
@@ -58,15 +58,22 @@ class ParityReport {
 
 /// Compares prerendered body text against the text a Flutter app renders and
 /// reports any divergence.
-class ParityGuard {
+final class ParityGuard {
   /// Creates a parity guard.
   ///
-  /// [threshold] is the minimum acceptable Jaccard similarity. [minWordLength]
-  /// filters out short tokens (punctuation fragments, articles) that would
-  /// otherwise create noisy false positives.
+  /// [threshold] sets how much injected content is tolerated: a report is
+  /// flagged when its injection ratio exceeds `1 - threshold`, so the default
+  /// of 0.9 flags a page more than 10% of whose words the prerender never
+  /// showed. It is not a similarity gate; a faithful prerender that covers
+  /// only part of the page has a low similarity but a near-zero injection
+  /// ratio and is not flagged. [minWordLength] filters out short tokens
+  /// (punctuation fragments, articles) that would otherwise create noisy
+  /// false positives.
   const ParityGuard({this.threshold = 0.9, this.minWordLength = 3});
 
-  /// The minimum acceptable similarity before a report is flagged suspicious.
+  /// Controls the injection tolerance: a report is flagged when its injection
+  /// ratio exceeds `1 - threshold`. See the constructor for why this is not a
+  /// similarity gate.
   final double threshold;
 
   /// The minimum token length considered a meaningful word.

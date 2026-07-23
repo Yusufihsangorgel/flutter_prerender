@@ -9,7 +9,7 @@ import 'package:path/path.dart' as p;
 /// (the browser loads `/some/route`, Flutter boots from `index.html`, and its
 /// router navigates to the requested path). Requests that try to escape the
 /// served directory are rejected.
-class StaticServer {
+final class StaticServer {
   StaticServer._(this._server, this.rootDir);
 
   final HttpServer _server;

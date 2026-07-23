@@ -15,7 +15,7 @@ import 'semantics_extractor.dart';
 import 'sitemap.dart';
 
 /// The outcome of prerendering a single route.
-class RouteResult {
+final class RouteResult {
   /// Creates a [RouteResult].
   const RouteResult({
     required this.path,
@@ -51,7 +51,7 @@ class RouteResult {
 
 /// A route whose capture failed outright, for example a same-origin link to
 /// a PDF, an image, or some other non-Flutter asset that a crawl reached.
-class FailedRoute {
+final class FailedRoute {
   /// Creates a [FailedRoute].
   const FailedRoute({required this.path, required this.message});
 
@@ -63,7 +63,7 @@ class FailedRoute {
 }
 
 /// The outcome of a complete prerender run.
-class PrerenderResult {
+final class PrerenderResult {
   /// Creates a [PrerenderResult].
   const PrerenderResult({
     required this.routes,
@@ -111,7 +111,7 @@ class PrerenderResult {
 
 /// Drives the end-to-end prerender: capture each route, recover content,
 /// build HTML, run the parity guard, write files, and emit a sitemap.
-class PrerenderEngine {
+final class PrerenderEngine {
   /// Creates an engine from [config] and a [capturer].
   PrerenderEngine({
     required this.config,
