@@ -365,8 +365,16 @@ class PrerenderEngine {
 
   static File _writeRoute(String outDir, String route, String html) {
     final relative = route == '/' ? '' : route.replaceFirst('/', '');
-    final dir = Directory(p.join(outDir, relative))
-      ..createSync(recursive: true);
+    final target = p.normalize(p.join(outDir, relative));
+    // Defence in depth: normalizeRoute already rejects `..` and `//`, but
+    // refuse to write anywhere outside the output directory rather than trust
+    // that every route reaching here came through it.
+    if (target != outDir && !p.isWithin(outDir, target)) {
+      throw ConfigException(
+        'Refusing to write route "$route" outside the output directory.',
+      );
+    }
+    final dir = Directory(target)..createSync(recursive: true);
     final file = File(p.join(dir.path, 'index.html'))..writeAsStringSync(html);
     return file;
   }

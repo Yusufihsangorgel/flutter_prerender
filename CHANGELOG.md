@@ -1,3 +1,17 @@
+## 0.3.2
+
+- Fix a route being able to write its `index.html` outside the output
+  directory. A route is turned into a path under `--out`, but `normalizeRoute`
+  only ensured a single leading slash: a `..` segment (`../secret`) wrote above
+  the output directory, and a leading `//` (`//etc/passwd`) became an absolute
+  path that `path.join` honoured, discarding `--out` entirely. This was
+  reachable from a plain routes file or a YAML config, not only `--crawl`, and
+  had been present since 0.1.0. `normalizeRoute` now rejects both shapes;
+  discovered crawl links that would traverse are skipped rather than aborting
+  the crawl; and the writer refuses any target outside the output directory as
+  a second layer. Ordinary routes, and a safe absolute link like `/../about`
+  that cannot climb above root, are unaffected.
+
 ## 0.3.1
 
 - Fix `--crawl` aborting the whole run and discarding every page already

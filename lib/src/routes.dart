@@ -44,9 +44,22 @@ String normalizeRoute(String raw, {int? lineNumber}) {
   final withoutTrailing = value.endsWith('/')
       ? value.substring(0, value.length - 1)
       : value;
-  return withoutTrailing.startsWith('/')
+  final route = withoutTrailing.startsWith('/')
       ? withoutTrailing
       : '/$withoutTrailing';
+  // A route is written to disk as a path under the output directory, so it
+  // must not be able to climb out of it. A `..` segment would write above the
+  // output directory; a leading `//` is an absolute path that path.join would
+  // honour, discarding the output directory entirely.
+  if (route.startsWith('//')) {
+    throw ConfigException('Route must not start with "//": "$value"$where');
+  }
+  if (route.split('/').contains('..')) {
+    throw ConfigException(
+      'Route must not contain a ".." segment: "$value"$where',
+    );
+  }
+  return route;
 }
 
 /// Resolves a discovered link [href] to a same-origin route path, or returns
@@ -78,7 +91,14 @@ String? sameOriginRoute(String href, {String? origin}) {
 
 String? _routeFromPath(String path) {
   if (path.isEmpty) return null;
-  return normalizeRoute(path);
+  try {
+    return normalizeRoute(path);
+  } on ConfigException {
+    // A discovered link that cannot become a safe, writable route (a `..`
+    // traversal, for example) is skipped, the same as any other non-crawlable
+    // link, rather than aborting the crawl.
+    return null;
+  }
 }
 
 /// Selects new same-origin routes discovered from a page's link [hrefs].
