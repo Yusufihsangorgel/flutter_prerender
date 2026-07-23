@@ -1,3 +1,17 @@
+## 0.3.1
+
+- Fix `--crawl` aborting the whole run and discarding every page already
+  rendered when it followed a same-origin link to something that is not a
+  Flutter route, such as a PDF or an image linked from the site's own nav or
+  footer. The browser capturer already treats an empty semantics tree and
+  empty rendered text as "this page never booted a Flutter app" and throws;
+  the engine now catches that per route instead of letting it escape `run()`
+  and take down the whole prerender. Every route rendered before the failure
+  keeps its file and its sitemap entry.
+- The failed route is recorded in the new `PrerenderResult.failedRoutes`,
+  printed in the CLI summary, and reported as a warning on `stderr`.
+  `--fail-on-empty` also exits non-zero when a route failed to capture.
+
 ## 0.3.0
 
 - Add `--crawl`, which discovers routes by following the in-page links the

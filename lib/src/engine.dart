@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'browser.dart';
 import 'config.dart';
 import 'content_node.dart';
+import 'exceptions.dart';
 import 'html_builder.dart';
 import 'parity.dart';
 import 'robots.dart';
@@ -48,6 +49,19 @@ class RouteResult {
   bool get isEmpty => nodeCount == 0;
 }
 
+/// A route whose capture failed outright, for example a same-origin link to
+/// a PDF, an image, or some other non-Flutter asset that a crawl reached.
+class FailedRoute {
+  /// Creates a [FailedRoute].
+  const FailedRoute({required this.path, required this.message});
+
+  /// The route path that could not be captured.
+  final String path;
+
+  /// A human-readable description of why capture failed.
+  final String message;
+}
+
 /// The outcome of a complete prerender run.
 class PrerenderResult {
   /// Creates a [PrerenderResult].
@@ -56,6 +70,7 @@ class PrerenderResult {
     this.sitemapPath,
     this.robotsPath,
     this.runWarnings = const <String>[],
+    this.failedRoutes = const <FailedRoute>[],
   });
 
   /// Per-route results, in the order the routes were prerendered.
@@ -71,12 +86,20 @@ class PrerenderResult {
   /// Warnings that concern the run as a whole rather than a single route.
   final List<String> runWarnings;
 
+  /// Routes that could not be captured at all, in the order they were
+  /// attempted. These are not included in [routes]; a crawl treats a failed
+  /// route as having no links and moves on to the rest of the queue.
+  final List<FailedRoute> failedRoutes;
+
   /// Whether any route produced a suspicious parity report.
   bool get hasParityWarnings =>
       routes.any((r) => r.parity?.isSuspicious ?? false);
 
   /// Whether any route recovered no crawlable content.
   bool get hasEmptyRoutes => routes.any((r) => r.isEmpty);
+
+  /// Whether any route failed to capture.
+  bool get hasFailedRoutes => failedRoutes.isNotEmpty;
 
   /// Every warning from the run, run-level first, then per-route.
   List<String> get allWarnings => [
@@ -129,6 +152,7 @@ class PrerenderEngine {
     }
 
     final results = <RouteResult>[];
+    final failedRoutes = <FailedRoute>[];
     final signatureToRoute = <String, String>{};
 
     final seeds = config.routes.isEmpty
@@ -150,6 +174,7 @@ class PrerenderEngine {
           outDir,
           signatureToRoute,
           results,
+          failedRoutes,
           log,
         );
         final discovered = discoverRoutes(
@@ -171,6 +196,7 @@ class PrerenderEngine {
           outDir,
           signatureToRoute,
           results,
+          failedRoutes,
           log,
         );
       }
@@ -219,22 +245,38 @@ class PrerenderEngine {
       sitemapPath: sitemapPath,
       robotsPath: robotsPath,
       runWarnings: runWarnings,
+      failedRoutes: failedRoutes,
     );
   }
 
   /// Prerenders a single [spec]: captures the page, recovers content, builds
   /// and writes the HTML, records the result, and returns the recovered nodes
   /// so a crawl can follow their links.
+  ///
+  /// A same-origin link found while crawling is not necessarily a Flutter
+  /// route; it may point at a PDF, an image, or some other asset served by
+  /// the same static server. When the browser reports [RouteCaptureException]
+  /// for [spec], that is recorded in [failedRoutes] instead of [results], and
+  /// an empty node list is returned so the crawl has no links to follow from
+  /// it and moves on to the rest of the queue.
   Future<List<ContentNode>> _renderRoute(
     RouteSpec spec,
     Uri baseUri,
     Directory outDir,
     Map<String, String> signatureToRoute,
     List<RouteResult> results,
+    List<FailedRoute> failedRoutes,
     void Function(String)? log,
   ) async {
     log?.call('Prerendering ${spec.path} ...');
-    final captured = await capturer.capture(baseUri.resolve(spec.path));
+    final CapturedPage captured;
+    try {
+      captured = await capturer.capture(baseUri.resolve(spec.path));
+    } on RouteCaptureException catch (error) {
+      log?.call('  warning: failed to capture ${spec.path}: ${error.message}');
+      failedRoutes.add(FailedRoute(path: spec.path, message: error.message));
+      return const <ContentNode>[];
+    }
     final nodes = extractor.extract(captured.semanticsHtml);
     final meta = spec.meta.merge(config.defaults);
     final pageUrl = config.baseUrl == null

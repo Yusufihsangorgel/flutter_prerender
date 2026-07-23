@@ -24,6 +24,30 @@ class _FakeCapturer implements PageCapturer {
   Future<void> close() async {}
 }
 
+/// A capturer that throws [RouteCaptureException] for routes in [failing]
+/// and returns canned content for everything else, so a run with one bad
+/// same-origin link can be exercised end to end.
+class _PartialFailureCapturer implements PageCapturer {
+  _PartialFailureCapturer({required this.failing});
+
+  final Set<String> failing;
+
+  @override
+  Future<CapturedPage> capture(Uri url) async {
+    if (failing.contains(url.path)) {
+      throw RouteCaptureException(url.path, 'no content was recovered');
+    }
+    return const CapturedPage(
+      title: 'Fake Title',
+      semanticsHtml: '<flt-semantics-host><h1>Coffee</h1></flt-semantics-host>',
+      renderedText: 'Coffee',
+    );
+  }
+
+  @override
+  Future<void> close() async {}
+}
+
 void main() {
   test('--help prints usage and exits 0', () async {
     final out = StringBuffer();
@@ -167,6 +191,59 @@ void main() {
       final sitemapXml = sitemap.readAsStringSync();
       expect(sitemapXml, contains('<loc>https://x.com/</loc>'));
       expect(sitemapXml, contains('<loc>https://x.com/about</loc>'));
+    });
+
+    test('a route that fails to capture does not abort the run', () async {
+      final out = StringBuffer();
+      final err = StringBuffer();
+      final code = await runCli(
+        [
+          '--build-dir',
+          buildDir,
+          '--routes',
+          routesFile,
+          '--out',
+          outDir,
+          '--base-url',
+          'https://x.com',
+        ],
+        out: out,
+        err: err,
+        capturerFactory: (_) => _PartialFailureCapturer(failing: {'/about'}),
+      );
+      expect(code, 0);
+
+      final home = File(p.join(outDir, 'index.html'));
+      expect(home.existsSync(), isTrue);
+      final about = File(p.join(outDir, 'about', 'index.html'));
+      expect(about.existsSync(), isFalse);
+
+      final sitemap = File(p.join(outDir, 'sitemap.xml'));
+      expect(sitemap.existsSync(), isTrue);
+      expect(sitemap.readAsStringSync(), isNot(contains('/about')));
+
+      expect(out.toString(), contains('[failed: no content was recovered]'));
+      expect(err.toString(), contains('/about: failed to capture'));
+    });
+
+    test('--fail-on-empty exits 3 when a route fails to capture', () async {
+      final err = StringBuffer();
+      final code = await runCli(
+        [
+          '--build-dir',
+          buildDir,
+          '--routes',
+          routesFile,
+          '--out',
+          outDir,
+          '--fail-on-empty',
+        ],
+        out: StringBuffer(),
+        err: err,
+        capturerFactory: (_) => _PartialFailureCapturer(failing: {'/about'}),
+      );
+      expect(code, 3);
+      expect(err.toString(), contains('/about: failed to capture'));
     });
 
     test('--fail-on-empty exits 3 and labels empty routes', () async {

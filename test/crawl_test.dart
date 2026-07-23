@@ -20,6 +20,31 @@ class _MapCapturer implements PageCapturer {
   Future<void> close() async {}
 }
 
+/// A capturer that returns canned semantics per route path, and throws
+/// [RouteCaptureException] for routes in [failing] — what a same-origin link
+/// to a non-Flutter asset (a PDF, an image, and so on) looks like to a crawl.
+class _FailingCapturer implements PageCapturer {
+  _FailingCapturer({required this.byPath, required this.failing});
+
+  final Map<String, String> byPath;
+  final Set<String> failing;
+
+  @override
+  Future<CapturedPage> capture(Uri url) async {
+    if (failing.contains(url.path)) {
+      throw RouteCaptureException(url.path, 'no content was recovered');
+    }
+    return CapturedPage(
+      title: 'T',
+      semanticsHtml: byPath[url.path] ?? '',
+      renderedText: '',
+    );
+  }
+
+  @override
+  Future<void> close() async {}
+}
+
 String _links(List<String> hrefs) =>
     '<flt-semantics-host><h1>Page</h1>'
     '${hrefs.map((h) => '<a href="$h">link</a>').join()}'
@@ -115,6 +140,23 @@ void main() {
       final result = await engine.run(baseUri);
       final paths = result.routes.map((r) => r.path).toSet();
       expect(paths, {'/', '/about', '/beans', '/beans/kenya'});
+    });
+
+    test('continues past a same-origin link that fails to capture', () async {
+      final engine = PrerenderEngine(
+        config: PrerenderConfig(outDir: outDir.path, crawl: true),
+        capturer: _FailingCapturer(
+          byPath: {
+            '/': _links(['/about', '/assets/resume.pdf']),
+            '/about': _links([]),
+          },
+          failing: {'/assets/resume.pdf'},
+        ),
+      );
+      final result = await engine.run(baseUri);
+      expect(result.routes.map((r) => r.path).toSet(), {'/', '/about'});
+      expect(result.failedRoutes, hasLength(1));
+      expect(result.failedRoutes.single.path, '/assets/resume.pdf');
     });
 
     test('does not discover routes when crawl is off', () async {

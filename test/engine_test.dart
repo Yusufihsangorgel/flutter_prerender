@@ -19,6 +19,29 @@ class _MapCapturer implements PageCapturer {
   Future<void> close() async {}
 }
 
+/// A capturer that returns canned content per route path, and throws
+/// [RouteCaptureException] for routes in [failing], mirroring how
+/// [PuppeteerCapturer] reacts to a same-origin link that is not a Flutter
+/// route (a PDF, an image, and so on).
+class _ThrowingCapturer implements PageCapturer {
+  _ThrowingCapturer({required this.byPath, required this.failing});
+
+  final Map<String, CapturedPage> byPath;
+  final Set<String> failing;
+
+  @override
+  Future<CapturedPage> capture(Uri url) async {
+    if (failing.contains(url.path)) {
+      throw RouteCaptureException(url.path, 'no content was recovered');
+    }
+    return byPath[url.path] ??
+        const CapturedPage(title: '', semanticsHtml: '', renderedText: '');
+  }
+
+  @override
+  Future<void> close() async {}
+}
+
 CapturedPage _page(String semantics, {String? rendered}) => CapturedPage(
   title: 'T',
   semanticsHtml: semantics,
@@ -45,6 +68,30 @@ void main() {
     expect(result.routes.single.isEmpty, isTrue);
     expect(result.allWarnings.join(), contains('no crawlable content'));
   });
+
+  test(
+    'records a route that fails to capture without aborting the run',
+    () async {
+      final engine = PrerenderEngine(
+        config: PrerenderConfig(
+          outDir: outDir.path,
+          routes: const [RouteSpec('/'), RouteSpec('/assets/resume.pdf')],
+        ),
+        capturer: _ThrowingCapturer(
+          byPath: {
+            '/': _page('<flt-semantics-host><h1>Hi</h1></flt-semantics-host>'),
+          },
+          failing: {'/assets/resume.pdf'},
+        ),
+      );
+      final result = await engine.run(baseUri);
+      expect(result.routes.map((r) => r.path), ['/']);
+      expect(result.hasFailedRoutes, isTrue);
+      expect(result.failedRoutes, hasLength(1));
+      expect(result.failedRoutes.single.path, '/assets/resume.pdf');
+      expect(result.failedRoutes.single.message, contains('no content'));
+    },
+  );
 
   test('warns when two routes produce identical content', () async {
     const semantics =

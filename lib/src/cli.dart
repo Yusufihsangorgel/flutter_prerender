@@ -80,7 +80,9 @@ ArgParser buildParser() {
     ..addFlag(
       'fail-on-empty',
       negatable: false,
-      help: 'Exit non-zero if any route recovers no content.',
+      help:
+          'Exit non-zero if any route recovers no content or fails to '
+          'capture.',
     )
     ..addFlag(
       'dry-run',
@@ -237,15 +239,22 @@ Future<int> _execute(
     for (final warning in result.allWarnings) {
       err.writeln('warning: $warning');
     }
+    for (final failure in result.failedRoutes) {
+      err.writeln(
+        'warning: ${failure.path}: failed to capture: ${failure.message}',
+      );
+    }
     if (config.failOnParity && result.hasParityWarnings) {
       err.writeln(
         'Parity guard flagged one or more pages and --fail-on-parity is set.',
       );
       return 2;
     }
-    if (config.failOnEmpty && result.hasEmptyRoutes) {
+    if (config.failOnEmpty &&
+        (result.hasEmptyRoutes || result.hasFailedRoutes)) {
       err.writeln(
-        'One or more routes recovered no content and --fail-on-empty is set.',
+        'One or more routes recovered no content or failed to capture and '
+        '--fail-on-empty is set.',
       );
       return 3;
     }
@@ -310,6 +319,9 @@ void _printSummary(PrerenderResult result, StringSink out) {
       '  ${route.path}  '
       '${route.nodeCount} nodes, ${route.byteCount} bytes$flag',
     );
+  }
+  for (final failure in result.failedRoutes) {
+    out.writeln('  ${failure.path}  [failed: ${failure.message}]');
   }
   if (result.sitemapPath != null) {
     out.writeln('Sitemap: ${result.sitemapPath}');
