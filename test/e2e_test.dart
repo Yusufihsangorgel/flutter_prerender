@@ -95,8 +95,9 @@ void main() {
         // leave it alone: a project that ships web/robots.txt has its crawl
         // rules copied into the build, and replacing them would be a worse
         // bug than not writing the file.
-        File(p.join(outDir.path, 'robots.txt'))
-            .writeAsStringSync('User-agent: *\nDisallow: /private\n');
+        File(
+          p.join(outDir.path, 'robots.txt'),
+        ).writeAsStringSync('User-agent: *\nDisallow: /private\n');
         final second = await engine.run(server.baseUri);
         expect(second.robotsPath, isNull);
         expect(
