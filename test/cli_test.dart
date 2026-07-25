@@ -68,10 +68,10 @@ void main() {
     // pubspec but forgets it, which is how it silently sat at 0.1.0 for three
     // releases.
     final pubspec = File('pubspec.yaml').readAsStringSync();
-    final declared = RegExp(r'^version:\s*(.+)$', multiLine: true)
-        .firstMatch(pubspec)!
-        .group(1)!
-        .trim();
+    final declared = RegExp(
+      r'^version:\s*(.+)$',
+      multiLine: true,
+    ).firstMatch(pubspec)!.group(1)!.trim();
     expect(packageVersion, declared);
   });
 

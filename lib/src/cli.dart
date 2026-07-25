@@ -55,7 +55,8 @@ ArgParser buildParser() {
     ..addOption('wait', help: 'Extra settle wait, in milliseconds.')
     ..addOption(
       'parity-threshold',
-      help: 'Injection tolerance: flag a page when more than (1 - this) of '
+      help:
+          'Injection tolerance: flag a page when more than (1 - this) of '
           'its words were never shown (0.0-1.0).',
     )
     ..addFlag(
