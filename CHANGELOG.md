@@ -1,3 +1,51 @@
+## 1.1.0
+
+Two ways this produced wrong output on a completely standard app, both found by
+running it against a fresh `go_router` project rather than by reading the code.
+
+### The generated page kept nothing from your build
+
+Prerendering replaces the document a visitor receives, and the generator wrote a
+fresh `<head>` from scratch. Everything `flutter build web` had put there was
+dropped: the PWA manifest, the favicon, the theme colour, and most
+consequentially `<base href>`.
+
+Without that base href, `flutter_bootstrap.js` resolves `main.dart.js` against
+the deep route it was served from, so `/beans/kenya` asked for
+`/beans/kenya/main.dart.js`, got a 404, and the Flutter app never booted. The
+visitor was left on the static snapshot forever. Nothing in the output looked
+wrong, which is why it survived a release.
+
+The build's own head is now carried into every generated page. Tags the tool
+computes per route (title, description, canonical, Open Graph, Twitter, JSON-LD)
+still win; charset and viewport are not duplicated; inline scripts are dropped,
+because a build's service-worker bootstrap re-registers against the wrong scope
+from a deep route. An explicit `baseHref` in your config still overrides
+everything.
+
+### Every route could come out as a copy of the home page, and the run passed
+
+Flutter web defaults to the hash URL strategy, where the route lives after a `#`
+that no server and no crawler ever sees. Prerendering an app in that state gives
+you N byte-identical files. The tool warned per route, said "the app may not be
+routing on the path", and exited `0` — so CI went green and you deployed four
+pages that each claim to be different.
+
+- The warning now names the cause and the fix: call `usePathUrlStrategy()`.
+- When *every* non-root route collapses onto the root, that is not a warning any
+  more. It exits `4` and writes nothing you would have had to un-deploy. One
+  duplicate among several is still just a warning, because two paths really can
+  render the same page.
+
+### Also
+
+- The README now says to install with `dart pub global activate`, and measures
+  what `flutter pub add` costs instead: 24 packages resolved into your app's
+  runtime dependencies for a build-time tool.
+- It also says the first run downloads about 150 MB of Chromium and takes
+  minutes, and suggests caching it in CI.
+- New: `SourceHead`, exported, if you drive the engine yourself.
+
 ## 1.0.0
 
 First stable release. From here the public API follows semantic versioning: a

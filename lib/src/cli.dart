@@ -8,11 +8,12 @@ import 'config.dart';
 import 'engine.dart';
 import 'exceptions.dart';
 import 'routes.dart';
+import 'source_head.dart';
 import 'static_server.dart';
 
 /// The published version of the package. A test in `test/cli_test.dart`
 /// reads `pubspec.yaml` and fails if this drifts from it.
-const String packageVersion = '1.0.0';
+const String packageVersion = '1.1.0';
 
 /// The default config file name looked up in the working directory.
 const String defaultConfigFile = 'flutter_prerender.yaml';
@@ -233,7 +234,11 @@ Future<int> _execute(
   final server = await StaticServer.start(config.buildDir, port: config.port);
   final capturer = (capturerFactory ?? _defaultCapturer)(config);
   try {
-    final engine = PrerenderEngine(config: config, capturer: capturer);
+    final engine = PrerenderEngine(
+      config: config,
+      capturer: capturer,
+      sourceHead: SourceHead.parse(indexHtml.readAsStringSync()),
+    );
     final result = await engine.run(
       server.baseUri,
       log: verbose ? out.writeln : null,
@@ -246,6 +251,17 @@ Future<int> _execute(
       err.writeln(
         'warning: ${failure.path}: failed to capture: ${failure.message}',
       );
+    }
+    if (result.collapsedOntoRoot) {
+      err.writeln(
+        'Every route other than / came out as a copy of /, so this run wrote '
+        '${result.routes.length} identical files. Flutter web defaults to the '
+        'hash URL strategy, where the route lives after a "#" and no server '
+        'or crawler ever sees it. Call usePathUrlStrategy() from '
+        'package:flutter_web_plugins/url_strategy.dart in main(), rebuild, '
+        'and run this again.',
+      );
+      return 4;
     }
     if (config.failOnParity && result.hasParityWarnings) {
       err.writeln(

@@ -64,7 +64,13 @@ void main() {
         extraWaitMs: config.waitMs,
       );
       try {
-        final engine = PrerenderEngine(config: config, capturer: capturer);
+        final engine = PrerenderEngine(
+          config: config,
+          capturer: capturer,
+          sourceHead: SourceHead.parse(
+            File(p.join(buildDir, 'index.html')).readAsStringSync(),
+          ),
+        );
         final result = await engine.run(server.baseUri);
 
         expect(result.routes, hasLength(1));
@@ -78,6 +84,14 @@ void main() {
         expect(html, contains('<a href='));
         // The parity guard should be satisfied for a faithful prerender.
         expect(route.parity?.isSuspicious, isFalse);
+
+        // Carried over from the build's own index.html. Without the base href
+        // a deep route resolves main.dart.js against itself and the app never
+        // boots; without the manifest and icon the deployed page stops being
+        // installable and loses its favicon.
+        expect(html, contains('<base href='));
+        expect(html, contains('rel="manifest"'));
+        expect(html, contains('rel="icon"'));
 
         expect(result.sitemapPath, isNotNull);
 

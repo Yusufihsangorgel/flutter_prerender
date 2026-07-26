@@ -9,6 +9,41 @@ your machine or in CI. It is not a package you add to your app's dependencies, s
 pub.dev lists it under the platforms it *runs* on (Linux, macOS, Windows), not the
 web app it targets.
 
+```
+dart pub global activate flutter_prerender
+```
+
+> **Install it globally, not into your app.** `flutter pub add flutter_prerender`
+> also works and is the wrong thing: it pulls puppeteer and twenty-three other
+> packages into your app's runtime dependencies for a tool that only ever runs
+> at build time. (Measured: a project whose only dependency is this one resolves
+> 24 packages.)
+>
+> **First run downloads Chromium** (about 150 MB) and takes a few minutes.
+> Later runs reuse it and take seconds. In CI, cache the puppeteer download
+> directory or the first build of every day pays for it again.
+
+## Before you start: two things that will bite you
+
+**1. Turn off the hash URL strategy.** Flutter web defaults to putting the route
+after a `#`, which no server and no crawler ever sees, so every path serves the
+same page. Prerendering an app in that state produces N byte-identical files.
+This tool now detects that and exits `4` rather than writing them, but the fix
+is in your app:
+
+```dart
+import 'package:flutter_web_plugins/url_strategy.dart';
+
+void main() {
+  usePathUrlStrategy();
+  runApp(const MyApp());
+}
+```
+
+**2. Serve deep routes from your host.** `/beans/kenya` has to return the
+generated file for that path. Any static host can do it; the shape is the same
+as any single-page app deployment.
+
 `flutter_prerender` loads each route of a `flutter build web` output in headless
 Chrome, enables Flutter's accessibility tree, and writes a static HTML document
 per route: real `<h1>`/`<p>`/`<a>`, plus `<title>`, meta description, Open

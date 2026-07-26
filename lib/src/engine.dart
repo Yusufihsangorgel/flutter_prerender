@@ -13,6 +13,7 @@ import 'robots.dart';
 import 'routes.dart';
 import 'semantics_extractor.dart';
 import 'sitemap.dart';
+import 'source_head.dart';
 
 /// The outcome of prerendering a single route.
 final class RouteResult {
@@ -101,6 +102,21 @@ final class PrerenderResult {
   /// Whether any route failed to capture.
   bool get hasFailedRoutes => failedRoutes.isNotEmpty;
 
+  /// Whether every route other than the root came out as a copy of the root.
+  ///
+  /// One duplicate can be legitimate: two paths really can render the same
+  /// page. All of them cannot. That signature means the app never routed on
+  /// the path at all, so the run produced N identical files, and shipping them
+  /// is worse than shipping nothing because each one claims to be a distinct
+  /// page. Almost always the cause is Flutter web's default hash URL strategy.
+  bool get collapsedOntoRoot {
+    final nonRoot = routes.where((r) => r.path != '/').toList();
+    if (nonRoot.isEmpty) return false;
+    return nonRoot.every(
+      (r) => r.warnings.any((w) => w.startsWith('produced the same content')),
+    );
+  }
+
   /// Every warning from the run, run-level first, then per-route.
   List<String> get allWarnings => [
     ...runWarnings,
@@ -117,12 +133,17 @@ final class PrerenderEngine {
     required this.config,
     required this.capturer,
     SemanticsExtractor? extractor,
+    SourceHead? sourceHead,
   }) : extractor = extractor ?? SemanticsExtractor(),
        _builder = HtmlBuilder(
          lang: config.lang,
          includeAppScript: config.includeAppScript,
          appScriptSrc: config.appScriptSrc,
-         baseHref: config.baseHref,
+         // An explicit baseHref wins; otherwise keep the one the Flutter build
+         // already had. Dropping it is what leaves a deep route resolving
+         // main.dart.js against itself and never booting.
+         baseHref: config.baseHref ?? sourceHead?.baseHref,
+         carriedHead: sourceHead?.carried ?? const [],
        ),
        _guard = ParityGuard(threshold: config.parityThreshold);
 
@@ -301,8 +322,12 @@ final class PrerenderEngine {
       final firstSeen = signatureToRoute[signature];
       if (firstSeen != null) {
         warnings.add(
-          'produced the same content as $firstSeen; the app may not be '
-          'routing on the path',
+          'produced the same content as $firstSeen. The app is serving one '
+          'page for every path, which almost always means Flutter web is on '
+          'its default hash URL strategy: the route lives after a "#", which '
+          'a server and a crawler never see. Call usePathUrlStrategy() from '
+          'package:flutter_web_plugins/url_strategy.dart in main() and '
+          'rebuild.',
         );
       } else {
         signatureToRoute[signature] = spec.path;

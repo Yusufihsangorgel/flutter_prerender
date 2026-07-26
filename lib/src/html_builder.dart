@@ -22,6 +22,7 @@ final class HtmlBuilder {
     this.lang = 'en',
     this.includeAppScript = true,
     this.appScriptSrc = '/flutter_bootstrap.js',
+    this.carriedHead = const [],
     this.baseHref,
   });
 
@@ -33,6 +34,13 @@ final class HtmlBuilder {
 
   /// The `src` of the Flutter bootstrap script, resolved relative to the page.
   final String appScriptSrc;
+
+  /// Head elements copied from the Flutter build's own `index.html`.
+  ///
+  /// The manifest, the favicon, the theme colour and anything else the app
+  /// asked for. Written after the generated SEO tags so the build's own
+  /// resources are present without overriding the per-route metadata.
+  final List<String> carriedHead;
 
   /// An optional `<base href>` written into the document head.
   final String? baseHref;
@@ -79,6 +87,10 @@ final class HtmlBuilder {
     _writeOpenGraph(buffer, meta, title, pageUrl);
     _writeTwitter(buffer, meta, title);
     _writeJsonLd(buffer, meta.jsonLd);
+
+    for (final element in carriedHead) {
+      buffer.writeln('  $element');
+    }
 
     buffer
       ..writeln('</head>')

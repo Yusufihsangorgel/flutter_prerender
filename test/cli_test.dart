@@ -6,6 +6,10 @@ import 'package:test/test.dart';
 
 /// A capturer that returns canned content, so the full pipeline can run
 /// without a real browser.
+/// Stands in for a correctly routing app: what it returns depends on the path.
+///
+/// An earlier version ignored the URL and returned one page for every route,
+/// which is precisely the broken-app signature the CLI now refuses to ship.
 class _FakeCapturer implements PageCapturer {
   _FakeCapturer({required this.semanticsHtml, required this.renderedText});
 
@@ -16,8 +20,27 @@ class _FakeCapturer implements PageCapturer {
   @override
   Future<CapturedPage> capture(Uri url) async => CapturedPage(
     title: title,
-    semanticsHtml: semanticsHtml,
-    renderedText: renderedText,
+    // Keep an empty page empty: some tests need the no-content path.
+    semanticsHtml: semanticsHtml.isEmpty
+        ? semanticsHtml
+        : '<h1>${url.path}</h1>$semanticsHtml',
+    renderedText: renderedText.isEmpty
+        ? renderedText
+        : '${url.path} $renderedText',
+  );
+
+  @override
+  Future<void> close() async {}
+}
+
+/// An app stuck on the default hash URL strategy: one page whatever you ask
+/// for.
+class _PathBlindCapturer implements PageCapturer {
+  @override
+  Future<CapturedPage> capture(Uri url) async => const CapturedPage(
+    title: 'Home',
+    semanticsHtml: '<h1>Home</h1><p>Welcome to the site.</p>',
+    renderedText: 'Home Welcome to the site.',
   );
 
   @override
@@ -256,6 +279,39 @@ void main() {
       );
       expect(code, 3);
       expect(err.toString(), contains('/about: failed to capture'));
+    });
+
+    test('exits 4 when every route collapses onto the root', () async {
+      final out = StringBuffer();
+      final err = StringBuffer();
+      final code = await runCli(
+        ['--build-dir', buildDir, '--routes', routesFile, '--out', outDir],
+        out: out,
+        err: err,
+        capturerFactory: (_) => _PathBlindCapturer(),
+      );
+
+      // An app on Flutter web's default hash URL strategy serves one page for
+      // every path, so the run would otherwise write N identical files and
+      // exit 0. Shipping those is worse than shipping nothing: each one claims
+      // to be a distinct page.
+      expect(code, 4);
+      expect(err.toString(), contains('usePathUrlStrategy'));
+    });
+
+    test('one duplicate route among several is only a warning', () async {
+      final out = StringBuffer();
+      final err = StringBuffer();
+      final code = await runCli(
+        ['--build-dir', buildDir, '--routes', routesFile, '--out', outDir],
+        out: out,
+        err: err,
+        capturerFactory: (_) =>
+            _FakeCapturer(semanticsHtml: '<p>Body</p>', renderedText: 'Body'),
+      );
+
+      // Two paths really can render the same page; only all of them cannot.
+      expect(code, 0);
     });
 
     test('--fail-on-empty exits 3 and labels empty routes', () async {

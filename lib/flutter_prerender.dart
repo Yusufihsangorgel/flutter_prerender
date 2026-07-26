@@ -27,4 +27,5 @@ export 'src/route_meta.dart';
 export 'src/routes.dart';
 export 'src/semantics_extractor.dart';
 export 'src/sitemap.dart';
+export 'src/source_head.dart';
 export 'src/static_server.dart';
