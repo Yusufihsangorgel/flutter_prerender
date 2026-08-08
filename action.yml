@@ -1,0 +1,159 @@
+name: flutter_prerender
+description: >-
+  Prerender a Flutter web build to static, crawlable HTML, with an optional
+  sitemap, robots.txt and a content-parity guard that fails the job when a page
+  recovers nothing.
+author: Yusuf İhsan Görgel
+branding:
+  icon: search
+  color: blue
+
+inputs:
+  build-dir:
+    description: Directory holding the `flutter build web` output.
+    required: false
+    default: build/web
+  out:
+    description: Where to write the prerendered HTML. Defaults to the build directory, in place.
+    required: false
+  base-url:
+    description: Public origin, e.g. https://example.com. Required for a sitemap.
+    required: false
+  routes:
+    description: Path to a routes file, one route per line.
+    required: false
+  config:
+    description: Path to a YAML config. Defaults to flutter_prerender.yaml when present.
+    required: false
+  crawl:
+    description: Discover routes by following in-page links from the seeds.
+    required: false
+    default: 'false'
+  sitemap:
+    description: Write sitemap.xml. Needs base-url.
+    required: false
+    default: 'false'
+  robots:
+    description: Write robots.txt pointing at the sitemap. Never overwrites an existing one.
+    required: false
+    default: 'false'
+  parity:
+    description: Run the content-parity guard.
+    required: false
+    default: 'true'
+  fail-on-parity:
+    description: Fail the job when a page fails the parity guard.
+    required: false
+    default: 'false'
+  fail-on-empty:
+    description: Fail the job when a route recovers no content or fails to capture.
+    required: false
+    default: 'true'
+  max-pages:
+    description: Cap on pages to prerender while crawling.
+    required: false
+  wait:
+    description: Extra settle wait per page, in milliseconds.
+    required: false
+  chrome:
+    description: >-
+      Path to a Chrome executable. Defaults to the one GitHub's Ubuntu runners
+      ship at /usr/bin/google-chrome, which skips puppeteer's Chromium
+      download. Set to an empty string to let puppeteer fetch its own.
+    required: false
+    default: /usr/bin/google-chrome
+  version:
+    description: Version to activate from pub.dev, e.g. 1.1.0. Defaults to the newest.
+    required: false
+  activate:
+    description: >-
+      Install flutter_prerender from pub.dev before running. Set to false when
+      a previous step already put it on PATH — pinning a git ref, or testing an
+      unreleased build with `dart pub global activate --source path`.
+    required: false
+    default: 'true'
+  args:
+    description: Extra raw arguments, appended last. An escape hatch for flags this action does not map.
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Activate flutter_prerender
+      if: inputs.activate == 'true'
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        if [ -n "$VERSION" ]; then
+          dart pub global activate flutter_prerender "$VERSION"
+        else
+          dart pub global activate flutter_prerender
+        fi
+
+    - name: Prerender
+      shell: bash
+      env:
+        # Through env rather than inline `${{ }}`: an input containing a quote
+        # would otherwise be spliced into the script itself.
+        BUILD_DIR: ${{ inputs.build-dir }}
+        OUT: ${{ inputs.out }}
+        BASE_URL: ${{ inputs.base-url }}
+        ROUTES: ${{ inputs.routes }}
+        CONFIG: ${{ inputs.config }}
+        MAX_PAGES: ${{ inputs.max-pages }}
+        WAIT: ${{ inputs.wait }}
+        CHROME: ${{ inputs.chrome }}
+        CRAWL: ${{ inputs.crawl }}
+        SITEMAP: ${{ inputs.sitemap }}
+        ROBOTS: ${{ inputs.robots }}
+        PARITY: ${{ inputs.parity }}
+        FAIL_ON_PARITY: ${{ inputs.fail-on-parity }}
+        FAIL_ON_EMPTY: ${{ inputs.fail-on-empty }}
+        EXTRA_ARGS: ${{ inputs.args }}
+      run: |
+        set -euo pipefail
+        args=(--build-dir "$BUILD_DIR")
+
+        # `if` rather than `[ -n "$x" ] && …`: under `set -e` a false test is a
+        # failing command, so the && form aborts the step the moment an
+        # optional input is unset — which is most runs.
+        add_option() {
+          if [ -n "$2" ]; then args+=("$1" "$2"); fi
+        }
+        add_flag() {
+          if [ "$2" = "true" ]; then args+=("$1"); fi
+        }
+
+        add_option --out "$OUT"
+        add_option --base-url "$BASE_URL"
+        add_option --routes "$ROUTES"
+        add_option --config "$CONFIG"
+        add_option --max-pages "$MAX_PAGES"
+        add_option --wait "$WAIT"
+
+        # Resolved here rather than left to puppeteer, which would otherwise
+        # download its own Chromium on every run.
+        if [ -n "$CHROME" ]; then
+          if [ -x "$CHROME" ]; then
+            args+=(--chrome "$CHROME")
+          else
+            echo "::warning::$CHROME is not executable; letting puppeteer download Chromium instead."
+          fi
+        fi
+
+        add_flag --crawl "$CRAWL"
+        add_flag --sitemap "$SITEMAP"
+        add_flag --robots "$ROBOTS"
+        add_flag --parity "$PARITY"
+        add_flag --fail-on-parity "$FAIL_ON_PARITY"
+        add_flag --fail-on-empty "$FAIL_ON_EMPTY"
+
+        if [ -n "$EXTRA_ARGS" ]; then
+          read -r -a extra <<< "$EXTRA_ARGS"
+          args+=("${extra[@]}")
+        fi
+
+        echo "flutter_prerender ${args[*]}"
+        flutter_prerender "${args[@]}"

@@ -27,3 +27,47 @@ jobs:
         run: dart analyze --fatal-infos lib test bin
       - name: Run tests
         run: dart test --exclude-tags e2e
+
+  # Proves the composite action actually runs on a runner, against the Flutter
+  # example in this repo. The bash being correct is not the same as the action
+  # working, and this is the only place that difference shows up.
+  action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Build the example web app
+        working-directory: example
+        run: |
+          flutter pub get
+          flutter build web
+
+      # The action installs from pub.dev by default; here it must exercise the
+      # code in this checkout, so put that on PATH first and skip the install.
+      - name: Put this checkout on PATH
+        run: |
+          dart pub get
+          dart pub global activate --source path .
+          echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+
+      - name: Run the action
+        uses: ./
+        with:
+          activate: 'false'
+          build-dir: example/build/web
+          out: example/build/prerendered
+          routes: example/routes.txt
+          base-url: https://example.com
+          sitemap: 'true'
+          fail-on-empty: 'true'
+
+      - name: Check it produced crawlable HTML
+        run: |
+          set -euo pipefail
+          test -f example/build/prerendered/index.html
+          test -f example/build/prerendered/sitemap.xml
+          # The point of the tool: text a crawler can read, not an empty canvas.
+          grep -q "<h1" example/build/prerendered/index.html
+          echo "prerendered $(find example/build/prerendered -name '*.html' | wc -l) page(s)"
