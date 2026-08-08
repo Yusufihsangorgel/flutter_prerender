@@ -251,6 +251,41 @@ crawlers content a user cannot see is cloaking, and search engines penalise it.
 Google endorses prerendering canvas/WebGL as long as the content is not
 "completely different", so a faithful prerender stays within its guidance.
 
+## In CI, as a GitHub Action
+
+A prerender step someone has to remember stops running by the second deploy.
+This repository ships a composite action so it lives in the workflow instead:
+
+```yaml
+- uses: subosito/flutter-action@v2
+  with: { channel: stable }
+- run: flutter build web
+
+- uses: Yusufihsangorgel/flutter_prerender@v1
+  with:
+    build-dir: build/web
+    base-url: https://example.com
+    routes: routes.txt
+    sitemap: 'true'
+    fail-on-empty: 'true'
+```
+
+Every CLI flag has an input of the same name; anything unmapped goes through
+`args`. Two defaults are worth knowing:
+
+- **`fail-on-empty` is on.** A page that recovers no text is the failure this
+  tool exists to catch, and a green build that shipped an empty canvas is worse
+  than a red one.
+- **`chrome` points at `/usr/bin/google-chrome`**, which GitHub's Ubuntu
+  runners already have. Without it, puppeteer downloads its own Chromium on
+  every run. Set it to `''` if your runner has no Chrome and you would rather
+  wait for the download.
+
+Set `activate: 'false'` when an earlier step already put `flutter_prerender` on
+`PATH` — pinning a git ref, or testing an unreleased build. This repository's
+own CI does exactly that, so the action job exercises the code in the checkout
+rather than the last release.
+
 ## Limits
 
 The scope is deliberately narrow. Known limits:

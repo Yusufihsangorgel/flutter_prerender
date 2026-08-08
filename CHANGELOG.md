@@ -1,3 +1,24 @@
+## 1.2.0
+
+- **Ship a GitHub Action.** A prerender step someone has to remember stops
+  running by the second deploy, which is how this class of tool quietly fails
+  to get adopted. `action.yml` is a composite action mapping every CLI flag to
+  an input, with `args` as the escape hatch for anything unmapped.
+  - `chrome` defaults to `/usr/bin/google-chrome`, which GitHub's Ubuntu
+    runners already have, so puppeteer does not download its own Chromium on
+    every run. Verified on a runner: the default resolved and the capture used
+    it.
+  - `fail-on-empty` defaults on. A build that shipped an empty canvas passing
+    green is worse than one that failed.
+  - `activate: false` skips the pub.dev install for callers that already put
+    the executable on PATH — pinning a git ref, or testing an unreleased build.
+- **A CI job that proves it runs**, rather than trusting that the script is
+  correct. It builds the Flutter example in this repository and runs the action
+  against it with `activate: false`, so the code under test is the checkout and
+  not the last release, then asserts the output. On the first run:
+  `Prerendered 1 route(s): / 7 nodes, 2191 bytes [parity ok]`, with a sitemap.
+- No library or CLI change.
+
 ## 1.1.0
 
 Two ways this produced wrong output on a completely standard app, both found by
