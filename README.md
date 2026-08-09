@@ -2,27 +2,6 @@
 
 ![flutter_prerender banner](https://raw.githubusercontent.com/Yusufihsangorgel/flutter_prerender/main/doc/banner.png)
 
-Prerender a Flutter web app to static, crawlable HTML for SEO.
-
-It is a **command-line tool**: you run it against a `flutter build web` output on
-your machine or in CI. It is not a package you add to your app's dependencies.
-pub.dev therefore lists it under the platforms it *runs* on (Linux, macOS,
-Windows) rather than the web app it targets.
-
-```
-dart pub global activate flutter_prerender
-```
-
-> **Install it globally, not into your app.** `flutter pub add flutter_prerender`
-> also works and is the wrong thing: it pulls puppeteer and twenty-three other
-> packages into your app's runtime dependencies for a tool that only ever runs
-> at build time. (Measured: a project whose only dependency is this one resolves
-> 24 packages.)
->
-> **First run downloads Chromium** (about 150 MB) and takes a few minutes.
-> Later runs reuse it and take seconds. In CI, cache the puppeteer download
-> directory or the first build of every day pays for it again.
-
 ## Why this instead of what you already have
 
 **Instead of `chrome --headless --dump-dom`.** The flag navigates once and
@@ -57,6 +36,27 @@ whether the resulting SEO is trustworthy at all.
 Skip it if the app sits behind a login. Nothing crawls it, prerendering has
 nothing to emit, and you would be paying a Chromium download per CI run for a
 file no one fetches.
+
+Prerender a Flutter web app to static, crawlable HTML for SEO.
+
+It is a **command-line tool**: you run it against a `flutter build web` output on
+your machine or in CI. It is not a package you add to your app's dependencies.
+pub.dev therefore lists it under the platforms it *runs* on (Linux, macOS,
+Windows) rather than the web app it targets.
+
+```
+dart pub global activate flutter_prerender
+```
+
+> **Install it globally, not into your app.** `flutter pub add flutter_prerender`
+> also works and is the wrong thing: it pulls puppeteer and twenty-three other
+> packages into your app's runtime dependencies for a tool that only ever runs
+> at build time. (Measured: a project whose only dependency is this one resolves
+> 24 packages.)
+>
+> **First run downloads Chromium** (about 150 MB) and takes a few minutes.
+> Later runs reuse it and take seconds. In CI, cache the puppeteer download
+> directory or the first build of every day pays for it again.
 
 ## Before you start: two things that will bite you
 

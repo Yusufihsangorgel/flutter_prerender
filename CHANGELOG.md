@@ -1,3 +1,9 @@
+## 1.3.1
+
+- The section on why to reach for this rather than the alternative now sits at
+  the top, where someone deciding whether to install it will read it, instead
+  of below a long explanation.
+
 ## 1.3.0
 
 - The README now answers, in its first screen, why to reach for this rather
