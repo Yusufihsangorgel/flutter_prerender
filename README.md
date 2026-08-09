@@ -5,9 +5,9 @@
 Prerender a Flutter web app to static, crawlable HTML for SEO.
 
 It is a **command-line tool**: you run it against a `flutter build web` output on
-your machine or in CI. It is not a package you add to your app's dependencies, so
-pub.dev lists it under the platforms it *runs* on (Linux, macOS, Windows), not the
-web app it targets.
+your machine or in CI. It is not a package you add to your app's dependencies.
+pub.dev therefore lists it under the platforms it *runs* on (Linux, macOS,
+Windows) rather than the web app it targets.
 
 ```
 dart pub global activate flutter_prerender
@@ -48,7 +48,7 @@ as any single-page app deployment.
 Chrome, enables Flutter's accessibility tree, and writes a static HTML document
 per route: real `<h1>`/`<p>`/`<a>`, plus `<title>`, meta description, Open
 Graph, Twitter Card, optional JSON-LD, and a `sitemap.xml`. The generated page
-also loads the original app, so a visitor with JavaScript still gets the full
+also loads the original app: a visitor with JavaScript still gets the full
 Flutter experience while a crawler reads the static content.
 
 This is the [server-side prerendering that Google Search recommends for
@@ -61,16 +61,16 @@ canvas/WebGL content][google-webgl], applied to Flutter web as a build step.
 A default Flutter web build draws its UI to a canvas. The DOM contains no
 readable text, so crawlers that do not run the app see nothing:
 
-- **Googlebot does not support WebGL.** Google's own guidance is to
+- Googlebot does not support WebGL. Google's own guidance is to
   "use server-side rendering to prerender ... [which] makes your content
   accessible to everyone, including Googlebot." ([Google Search][google-webgl])
-- **A default CanvasKit build is heavy.** It ships `canvaskit.wasm` at several
+- A default CanvasKit build is heavy. It ships `canvaskit.wasm` at several
   megabytes even after Brotli. Google warns that large or slow resources can be
-  skipped during rendering, so the app may never boot for the crawler at all.
-- **Crawlers that never run JavaScript** (Facebook, X/Twitter, LinkedIn and
+  skipped during rendering, and the app may never boot for the crawler at all.
+- Crawlers that never run JavaScript (Facebook, X/Twitter, LinkedIn and
   Slack link unfurlers) only read `index.html`.
 
-Runtime SEO packages inject tags after the app boots, so they inherit all three
+Runtime SEO packages inject tags after the app boots and inherit all three
 problems. Building the HTML ahead of time does not.
 
 Flutter's own FAQ recommends [Jaspr or plain HTML][flutter-faq] for text-rich,
@@ -170,14 +170,14 @@ It is off by default and never replaces a `robots.txt` that is already in the
 output. A project that ships `web/robots.txt` has it copied into the build, and
 overwriting somebody's crawl rules would be a worse bug than not writing the
 file at all; the existing one is left alone and the run reports it. The
-`Sitemap:` line only appears when a sitemap was actually produced, so crawlers
-are never sent to a URL that would 404.
+`Sitemap:` line only appears when a sitemap was actually produced, which keeps
+crawlers from being sent to a URL that would 404.
 
 ## Serving the output
 
 `build/prerendered/` holds one `index.html` per route plus `sitemap.xml`. It
-does not contain the app's JavaScript and wasm assets, so serve it alongside
-`build/web`, not instead of it. Two common topologies:
+does not contain the app's JavaScript and wasm assets. Serve it alongside
+`build/web` rather than instead of it. Two common topologies:
 
 **Overlay.** Lay the prerendered HTML over the build so each route's
 `index.html` is the crawlable one and every other asset comes from `build/web`:
@@ -240,7 +240,7 @@ accessibility tree on from the outside, so no app source change is required.
 After building each page, `flutter_prerender` runs a parity guard. It compares
 the generated HTML against Flutter's own accessibility text (the only
 machine-readable text the engine exposes) and flags words in the output that are
-not in that text, so it catches extractor drift and hand-edited output. It
+not in that text, which catches extractor drift and hand-edited output. It
 cannot verify the painted canvas, since there is no separate visible-text source
 to compare against. Image alt text is exempt, because it comes from an
 aria-label rather than visible body text. Pass `--fail-on-parity` to turn a flag
@@ -249,7 +249,7 @@ into a hard CI error.
 Keep the recovered content faithful and do not hand-inject keywords. Serving
 crawlers content a user cannot see is cloaking, and search engines penalise it.
 Google endorses prerendering canvas/WebGL as long as the content is not
-"completely different", so a faithful prerender stays within its guidance.
+"completely different"; a faithful prerender stays within its guidance.
 
 ## In CI, as a GitHub Action
 
@@ -273,16 +273,16 @@ This repository ships a composite action so it lives in the workflow instead:
 Every CLI flag has an input of the same name; anything unmapped goes through
 `args`. Two defaults are worth knowing:
 
-- **`fail-on-empty` is on.** A page that recovers no text is the failure this
+- `fail-on-empty` is on. A page that recovers no text is the failure this
   tool exists to catch, and a green build that shipped an empty canvas is worse
   than a red one.
-- **`chrome` points at `/usr/bin/google-chrome`**, which GitHub's Ubuntu
+- `chrome` points at `/usr/bin/google-chrome`, which GitHub's Ubuntu
   runners already have. Without it, puppeteer downloads its own Chromium on
   every run. Set it to `''` if your runner has no Chrome and you would rather
   wait for the download.
 
 Set `activate: 'false'` when an earlier step already put `flutter_prerender` on
-`PATH` — pinning a git ref, or testing an unreleased build. This repository's
+`PATH`: pinning a git ref, or testing an unreleased build. This repository's
 own CI does exactly that, so the action job exercises the code in the checkout
 rather than the last release.
 
@@ -290,18 +290,18 @@ rather than the last release.
 
 The scope is deliberately narrow. Known limits:
 
-- **Static snapshot.** Output reflects the app at build time. Content that
+- Static snapshot: output reflects the app at build time. Content that
   changes at runtime (live data, per-user views) is not re-prerendered until
   you run the tool again.
-- **No content behind auth or interaction.** The tool loads each route as an
+- No content behind auth or interaction: the tool loads each route as an
   anonymous first paint. Anything gated behind login, a tap, or a scroll is not
   captured.
-- **Multi-route needs URL routing.** Each route is loaded as its own URL, so
-  the app must resolve content from the path (deep linking). Routes reachable
+- Multi-route needs URL routing: each route is loaded as its own URL, and the
+  app must resolve content from the path (deep linking). Routes reachable
   only by in-app navigation are not captured.
-- **Order follows the semantics tree**, not on-screen geometry, so unusual
+- Order follows the semantics tree rather than on-screen geometry, and unusual
   layouts can reorder blocks.
-- **Requires Chrome** at prerender time (not at app runtime).
+- Requires Chrome at prerender time (not at app runtime).
 
 ## Compatibility
 

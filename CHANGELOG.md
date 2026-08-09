@@ -11,7 +11,7 @@
   - `fail-on-empty` defaults on. A build that shipped an empty canvas passing
     green is worse than one that failed.
   - `activate: false` skips the pub.dev install for callers that already put
-    the executable on PATH — pinning a git ref, or testing an unreleased build.
+    the executable on PATH: pinning a git ref, or testing an unreleased build.
 - **A CI job that proves it runs**, rather than trusting that the script is
   correct. It builds the Flutter example in this repository and runs the action
   against it with `activate: false`, so the code under test is the checkout and
@@ -49,7 +49,7 @@ everything.
 Flutter web defaults to the hash URL strategy, where the route lives after a `#`
 that no server and no crawler ever sees. Prerendering an app in that state gives
 you N byte-identical files. The tool warned per route, said "the app may not be
-routing on the path", and exited `0` — so CI went green and you deployed four
+routing on the path", and exited `0`. CI went green and you deployed four
 pages that each claim to be different.
 
 - The warning now names the cause and the fix: call `usePathUrlStrategy()`.
@@ -74,8 +74,8 @@ breaking change will not land without a major-version bump.
 
 - Seal the 20 leaf classes that make up the public surface (`PrerenderConfig`,
   `PrerenderResult`, `RouteSpec`, the exception types, and the rest) with
-  `final`. They are meant to be constructed and read, not extended, and nothing
-  in the package or its tests subtypes them. This keeps the rest of 1.x
+  `final`. They are meant to be constructed and read rather than extended, and
+  nothing in the package or its tests subtypes them. This keeps the rest of 1.x
   additive: `PrerenderResult` gained `failedRoutes` in 0.3.1 and
   `PrerenderConfig` grows fields most minors, and each such addition would break
   an external `implements`. `PageCapturer` stays an open interface, because
@@ -99,8 +99,8 @@ breaking change will not land without a major-version bump.
   only ensured a single leading slash: a `..` segment (`../secret`) wrote above
   the output directory, and a leading `//` (`//etc/passwd`) became an absolute
   path that `path.join` honoured, discarding `--out` entirely. This was
-  reachable from a plain routes file or a YAML config, not only `--crawl`, and
-  had been present since 0.1.0. `normalizeRoute` now rejects both shapes;
+  reachable from a plain routes file or a YAML config as well as from
+  `--crawl`, and had been present since 0.1.0. `normalizeRoute` now rejects both shapes;
   discovered crawl links that would traverse are skipped rather than aborting
   the crawl; and the writer refuses any target outside the output directory as
   a second layer. Ordinary routes, and a safe absolute link like `/../about`
@@ -131,13 +131,13 @@ breaking change will not land without a major-version bump.
   followed only when its origin matches `--base-url`. Without `--crawl` nothing
   changes: the tool still prerenders exactly the routes you list.
 - The sitemap now lists the pages that were actually prerendered rather than
-  the configured route list, so a crawl's discovered pages are included. For a
+  the configured route list, which includes a crawl's discovered pages. For a
   fixed route list the output is the same as before.
 
 ## 0.2.2
 
 - Shorten the screenshot description. pub.dev accepts up to 200 characters but
-  scores only those under 160, so the previous release published cleanly and
+  scores only those under 160. The previous release published cleanly and
   quietly gave up the documentation points it was meant to earn.
 
 ## 0.2.1
