@@ -23,6 +23,41 @@ dart pub global activate flutter_prerender
 > Later runs reuse it and take seconds. In CI, cache the puppeteer download
 > directory or the first build of every day pays for it again.
 
+## Why this instead of what you already have
+
+**Instead of `chrome --headless --dump-dom`.** The flag navigates once and
+serializes the DOM. A Flutter web app in that DOM is a `<canvas>`; readable
+nodes appear only after something clicks the engine's
+`[aria-label="Enable accessibility"]` placeholder and waits for the semantics
+tree to fill. This tool performs that click and then polls
+`document.body.innerText` until it grows or `semanticsTimeout` expires
+(`browser.dart:73-79` and `158-169`). One navigation and one serialize has
+nowhere to put that step.
+
+**Instead of seo_renderer.** It is a widget, not a build step. `TextRenderer`
+is a `StatefulWidget` whose state extends `RendererState`
+(`text_renderer_web.dart:12`, `33`), so its DOM appears only after your app
+boots and runs, and only when `RobotDetector.detected(context)` is true
+(line 84). That check is
+`RegExp(r'/bot|google|baidu|bing|msn|teoma|slurp|yandex/i')`
+(`robot_detector_web.dart:26`), a JavaScript literal used as a Dart pattern:
+the `i` is matched text, not a flag, so `hasMatch('Yandex')` and
+`hasMatch('GOOGLE')` both return false. Its issues #1 and #7 are open on
+whether the resulting SEO is trustworthy at all.
+
+## Reach for it when
+
+- A Flutter web app has to appear in Google's index with its real text, not an
+  empty canvas.
+- CI should fail the build when a route recovers no content
+  (`--fail-on-empty`, exit `3`).
+- Slack, WhatsApp, and Twitter link previews matter, and none of those fetchers
+  run JavaScript.
+
+Skip it if the app sits behind a login. Nothing crawls it, prerendering has
+nothing to emit, and you would be paying a Chromium download per CI run for a
+file no one fetches.
+
 ## Before you start: two things that will bite you
 
 **1. Turn off the hash URL strategy.** Flutter web defaults to putting the route
