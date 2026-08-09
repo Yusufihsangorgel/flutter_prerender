@@ -2,6 +2,10 @@
 
 ![flutter_prerender banner](https://raw.githubusercontent.com/Yusufihsangorgel/flutter_prerender/main/doc/banner.png)
 
+![The same build read twice: `flutter build web` gives a crawler zero words,
+the prerendered output gives it the real title, the description, Open Graph
+tags and JSON-LD](https://raw.githubusercontent.com/Yusufihsangorgel/flutter_prerender/main/doc/demo.gif)
+
 ## Why this instead of what you already have
 
 **Instead of `chrome --headless --dump-dom`.** The flag navigates once and

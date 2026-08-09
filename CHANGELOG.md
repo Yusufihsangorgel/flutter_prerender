@@ -1,3 +1,16 @@
+## 1.3.2
+
+- `packageVersion` was left at 1.2.0 while the pubspec moved to 1.3.1, so
+  `--version` reported the wrong number and the test that guards exactly this
+  was red through two releases. The constant is hand-maintained and the guard
+  exists because it has drifted before; it was not run before those two went
+  out. It is in step again.
+- Added `example/what_a_crawler_sees.dart`, which reads the same build before
+  and after prerendering and counts what is actually in each: zero words of
+  body text against fifty-two, the generated title against the real one, and
+  Open Graph and JSON-LD present rather than absent. The README opens with a
+  recording of it.
+
 ## 1.3.1
 
 - The section on why to reach for this rather than the alternative now sits at
