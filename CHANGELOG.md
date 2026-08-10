@@ -1,3 +1,11 @@
+## 1.3.5
+
+- `example/what_a_crawler_sees.dart` exits 69 when the build it reads has not
+  happened, matching every other example in this portfolio, and its message
+  now carries both commands rather than the second one only. Exiting 1 reads
+  as a crash to anything counting exit codes, and a missing precondition is
+  not one.
+
 ## 1.3.4
 
 - A before-and-after of what a crawler actually fetches. The claim that a

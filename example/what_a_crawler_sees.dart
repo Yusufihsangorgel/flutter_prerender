@@ -13,16 +13,25 @@ void main() {
   final after = File('example/build/prerendered/index.html');
 
   if (!before.existsSync()) {
-    stderr.writeln('run `flutter build web` in example/ first');
-    exit(1);
-  }
-  if (!after.existsSync()) {
+    // 69 is EX_UNAVAILABLE, which is what the rest of this portfolio's
+    // examples exit with when a precondition is missing. Exiting 1 reads as a
+    // crash to anything counting exit codes, and this is not one.
     stderr.writeln(
-      'no prerendered output yet. Run:\n'
+      'This example reads the output of a build that has not happened yet.\n'
+      '  cd example && flutter build web\n'
+      'Then prerender it, and run this again:\n'
       '  cd example && dart run ../bin/flutter_prerender.dart '
       '-c flutter_prerender.yaml',
     );
-    exit(1);
+    exit(69);
+  }
+  if (!after.existsSync()) {
+    stderr.writeln(
+      'The build is there but nothing has prerendered it yet. Run:\n'
+      '  cd example && dart run ../bin/flutter_prerender.dart '
+      '-c flutter_prerender.yaml',
+    );
+    exit(69);
   }
 
   final a = _Page(before.readAsStringSync());
