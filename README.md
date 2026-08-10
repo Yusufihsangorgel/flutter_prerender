@@ -6,6 +6,18 @@
 the prerendered output gives it the real title, the description, Open Graph
 tags and JSON-LD](https://raw.githubusercontent.com/Yusufihsangorgel/flutter_prerender/main/doc/demo.gif)
 
+The recording scrolls past. This is the same two documents side by side:
+
+![Two panels. The left one, what a crawler fetches today, reads 0 words,
+0 headings, 0 links and says there is nothing to read. The right one, after
+flutter_prerender, reads 52 words, 2 headings, 1 link and shows the actual copy
+about coffee
+roasting.](https://raw.githubusercontent.com/Yusufihsangorgel/flutter_prerender/main/doc/crawler-view.png)
+
+Both panels are read out of this repository — the shell `flutter build web`
+writes, and the page this tool writes and the example's test asserts against.
+Redraw them with `dart run tool/crawler_view_figure.dart`.
+
 ## Why this instead of what you already have
 
 **Instead of `chrome --headless --dump-dom`.** The flag navigates once and

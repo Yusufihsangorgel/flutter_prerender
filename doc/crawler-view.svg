@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="844" height="384" viewBox="0 0 844 384">
+  <rect width="100%" height="100%" fill="#14161C"/>
+  <text x="40.0" y="34" fill="#d8dee9" font-size="14" font-family="Menlo, monospace">what a crawler fetches today</text>
+  <text x="40.0" y="54" fill="#ff8f6b" font-size="12" font-family="Menlo, monospace">0 words · 0 headings · 0 links</text>
+  <rect x="40.0" y="74.0" width="360.0" height="250.0" fill="#1b1f28" stroke="#39414f" stroke-width="1.2" rx="4"/>
+  <text x="54.0" y="100.0" fill="#8b93a3" font-size="10.5" font-family="Menlo, monospace">&lt;title&gt; flutter_prerender_example</text>
+  <line x1="54.0" y1="112.0" x2="386.0" y2="112.0" stroke="#39414f" stroke-width="1"/>
+  <text x="220.0" y="204.0" fill="#ff8f6b" font-size="13" font-family="Menlo, monospace" text-anchor="middle">nothing to read</text>
+  <text x="220.0" y="226.0" fill="#8b93a3" font-size="11" font-family="Menlo, monospace" text-anchor="middle">the body holds one script tag</text>
+  <text x="444.0" y="34" fill="#d8dee9" font-size="14" font-family="Menlo, monospace">after flutter_prerender</text>
+  <text x="444.0" y="54" fill="#8ee0a1" font-size="12" font-family="Menlo, monospace">52 words · 2 headings · 1 links</text>
+  <rect x="444.0" y="74.0" width="360.0" height="250.0" fill="#1b1f28" stroke="#39414f" stroke-width="1.2" rx="4"/>
+  <text x="458.0" y="100.0" fill="#8b93a3" font-size="10.5" font-family="Menlo, monospace">&lt;title&gt; Zebrafish Coffee Roasters: Ethiopian Yir…</text>
+  <line x1="458.0" y1="112.0" x2="790.0" y2="112.0" stroke="#39414f" stroke-width="1"/>
+  <text x="458.0" y="136.0" fill="#d8dee9" font-size="11" font-family="Menlo, monospace">Quintessential Ethiopian Yirgacheffe We</text>
+  <text x="458.0" y="153.0" fill="#d8dee9" font-size="11" font-family="Menlo, monospace">roast marmoset-grade arabica beans in small</text>
+  <text x="458.0" y="170.0" fill="#d8dee9" font-size="11" font-family="Menlo, monospace">batches every Tuesday. Our flagship blend</text>
+  <text x="458.0" y="187.0" fill="#d8dee9" font-size="11" font-family="Menlo, monospace">carries notes of bergamot, persimmon and a</text>
+  <text x="458.0" y="204.0" fill="#d8dee9" font-size="11" font-family="Menlo, monospace">faint whisper of petrichor. Why our</text>
+  <text x="458.0" y="221.0" fill="#d8dee9" font-size="11" font-family="Menlo, monospace">customers keep coming back Free shipping on</text>
+  <text x="458.0" y="246.0" fill="#8b93a3" font-size="10.5" font-family="Menlo, monospace">…</text>
+  <text x="422.0" y="366" fill="#8b93a3" font-size="11" font-family="Menlo, monospace" text-anchor="middle">both panels are read from files in this repository: the shell `flutter build web` writes, and the page this tool writes</text>
+</svg>

@@ -3,7 +3,7 @@ description: >-
   Command-line tool that prerenders a Flutter web app to static, crawlable HTML
   for SEO. Loads each route in headless Chrome and emits headings, links, meta,
   and a sitemap.
-version: 1.3.3
+version: 1.3.4
 repository: https://github.com/Yusufihsangorgel/flutter_prerender
 issue_tracker: https://github.com/Yusufihsangorgel/flutter_prerender/issues
 topics:
@@ -19,6 +19,10 @@ screenshots:
        serve it to crawlers by User-Agent or as one hydrating page.
     path: doc/architecture.png
 
+  - description: >-
+      The same build read twice: a crawler gets 0 words, 0 headings and 0 links
+      from the shell, and 52 words, 2 headings and a link after prerendering.
+    path: doc/crawler-view.png
 environment:
   sdk: ^3.9.0
 
