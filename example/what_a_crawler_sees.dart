@@ -9,29 +9,32 @@
 import 'dart:io';
 
 void main() {
-  final before = File('example/build/web/index.html');
-  final after = File('example/build/prerendered/index.html');
+  // A real build if there is one, and the committed fixtures if there is not.
+  //
+  // The fallback is the point rather than a convenience: someone deciding
+  // whether this tool is worth installing should be able to see what it does
+  // before running a Flutter build, and these two files are the same two the
+  // package's own test asserts against.
+  var before = File('example/build/web/index.html');
+  var after = File('example/build/prerendered/index.html');
+  var source = 'your build';
 
-  if (!before.existsSync()) {
-    // 69 is EX_UNAVAILABLE, which is what the rest of this portfolio's
-    // examples exit with when a precondition is missing. Exiting 1 reads as a
-    // crash to anything counting exit codes, and this is not one.
-    stderr.writeln(
-      'This example reads the output of a build that has not happened yet.\n'
-      '  cd example && flutter build web\n'
-      'Then prerender it, and run this again:\n'
-      '  cd example && dart run ../bin/flutter_prerender.dart '
-      '-c flutter_prerender.yaml',
-    );
-    exit(69);
+  if (!before.existsSync() || !after.existsSync()) {
+    before = File('example/web/index.html');
+    after = File('example/expected_output/index.html');
+    source = 'the committed fixtures';
   }
-  if (!after.existsSync()) {
+
+  if (!before.existsSync() || !after.existsSync()) {
+    // Only reachable outside a checkout, so it says where it looked.
     stderr.writeln(
-      'The build is there but nothing has prerendered it yet. Run:\n'
+      'Nothing to read. Run this from the package root, or build the '
+      'example first:\n'
+      '  cd example && flutter build web\n'
       '  cd example && dart run ../bin/flutter_prerender.dart '
       '-c flutter_prerender.yaml',
     );
-    exit(69);
+    exit(69); // EX_UNAVAILABLE
   }
 
   final a = _Page(before.readAsStringSync());
@@ -39,6 +42,7 @@ void main() {
 
   stdout
     ..writeln('what a crawler reads, before and after prerendering')
+    ..writeln('  (reading $source)')
     ..writeln('')
     ..writeln('                      flutter build web    prerendered')
     ..writeln('  ${'-' * 56}')

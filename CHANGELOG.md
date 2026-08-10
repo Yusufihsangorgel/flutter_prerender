@@ -1,3 +1,10 @@
+## 1.3.6
+
+- The example falls back to the committed fixtures when no build is present,
+  and says which it read. Someone deciding whether the tool is worth installing
+  can now see the before-and-after without first running a Flutter build, and
+  the two files are the same ones the package's test asserts against.
+
 ## 1.3.5
 
 - `example/what_a_crawler_sees.dart` exits 69 when the build it reads has not
