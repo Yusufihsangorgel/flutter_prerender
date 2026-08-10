@@ -1,3 +1,11 @@
+## 1.3.3
+
+- Tests for `buildParser`, which nothing named. The flag and option names are
+  this tool's contract -- they live in somebody's CI file, so renaming one
+  breaks every pipeline that uses it while looking like a patch. Renaming a
+  single option now turns thirteen tests red, and moving a short form to
+  another option turns ten. No behaviour changed.
+
 ## 1.3.2
 
 - `packageVersion` was left at 1.2.0 while the pubspec moved to 1.3.1, so

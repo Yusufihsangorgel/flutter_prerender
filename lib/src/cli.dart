@@ -13,7 +13,7 @@ import 'static_server.dart';
 
 /// The published version of the package. A test in `test/cli_test.dart`
 /// reads `pubspec.yaml` and fails if this drifts from it.
-const String packageVersion = '1.3.2';
+const String packageVersion = '1.3.3';
 
 /// The default config file name looked up in the working directory.
 const String defaultConfigFile = 'flutter_prerender.yaml';
