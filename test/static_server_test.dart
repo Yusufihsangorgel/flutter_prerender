@@ -36,9 +36,8 @@ void main() {
     setUp(() async {
       dir = Directory.systemTemp.createTempSync('fp_static_');
       File(p.join(dir.path, 'index.html')).writeAsStringSync('<h1>Home</h1>');
-      File(
-        p.join(dir.path, 'main.dart.js'),
-      ).writeAsStringSync('console.log(1)');
+      File(p.join(dir.path, 'main.dart.js'))
+          .writeAsStringSync('console.log(1)');
       server = await StaticServer.start(dir.path);
     });
 

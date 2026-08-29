@@ -95,9 +95,8 @@ class _Page {
   }
 
   String get description {
-    final m = RegExp(
-      r'<meta[^>]+name="description"[^>]+content="([^"]*)"',
-    ).firstMatch(_html);
+    final m = RegExp(r'<meta[^>]+name="description"[^>]+content="([^"]*)"')
+        .firstMatch(_html);
     final value = m?.group(1)?.trim() ?? '';
     return value.isEmpty ? 'none' : '${value.length} chars';
   }
