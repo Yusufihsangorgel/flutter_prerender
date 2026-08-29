@@ -18,6 +18,56 @@ Both panels are read out of this repository — the shell `flutter build web`
 writes, and the page this tool writes and the example's test asserts against.
 Redraw them with `dart run tool/crawler_view_figure.dart`.
 
+The figure is drawn from files. The table below is fetched: each `index.html`
+is served over HTTP from a local static server and read with no browser and
+no JavaScript. That is the comparison a crawler that does not run the app
+actually makes.
+
+```
+                      flutter build web    prerendered
+  --------------------------------------------------------
+  HTML bytes            1538                 2964
+  h1 in raw HTML        no                   yes
+  paragraph in HTML     no                   yes
+  example title         no                   yes
+  example description   no                   yes
+  words before JS       0                    52
+
+  <title>
+    flutter build web  flutter_prerender_example
+    prerendered        Zebrafish Coffee Roasters: Ethiopian Yirgacheffe
+  meta description
+    flutter build web  A new Flutter project.
+    prerendered        Small-batch, carbon-neutral arabica roasted every Tuesday in Munich.
+```
+
+The shell is not an empty `<head>`. Flutter already writes a `<title>`
+(`flutter_prerender_example`) and a meta description (`A new Flutter project.`).
+Those are not the heading, the body copy, or the title and description the
+prerender config writes. The measured difference is what is in the HTML at
+fetch time.
+
+This does not prove ranking improved, it does not prove traffic improved,
+and Google's crawler does execute JavaScript in many cases, so the plain
+build is not necessarily invisible to it. The measured claim is about what
+is in the HTML at fetch time and about crawlers that do not execute
+scripts.
+
+Reproduce:
+
+```sh
+cd example && flutter build web
+cd ..
+dart run flutter_prerender \
+  --config example/flutter_prerender.yaml \
+  --build-dir example/build/web \
+  --out example/build/prerendered
+dart run tool/measure_crawler_fetch.dart
+```
+
+The script exits non-zero if the prerendered document is missing the heading,
+the body copy, the title, or the meta description.
+
 ## Why this instead of what you already have
 
 **Instead of `chrome --headless --dump-dom`.** The flag navigates once and

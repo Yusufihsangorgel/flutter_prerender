@@ -1,3 +1,14 @@
+## 1.5.0
+
+- A committed measurement of what a crawler that does not run JavaScript
+  actually receives. The README's before-and-after was counted from files on
+  disk; a crawler fetches over HTTP. `tool/measure_crawler_fetch.dart` serves
+  the example's `flutter build web` output and the prerendered output, fetches
+  each `index.html`, and exits non-zero if the prerendered document is missing
+  the heading, body copy, title, or meta description. The numbers in the
+  README are that script's output. This is verification, not a change to how
+  prerendering works. It does not measure ranking or traffic.
+
 ## 1.4.0
 
 - The rewrite rules that actually put the prerendered HTML in front of a
