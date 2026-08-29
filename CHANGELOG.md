@@ -1,3 +1,17 @@
+## 1.4.0
+
+- The rewrite rules that actually put the prerendered HTML in front of a
+  crawler. The tool writes the files; a host that then serves the SPA shell
+  for every path makes the run look like it did nothing. `doc/serving.md`
+  has the current config for Firebase Hosting, Netlify, and Cloudflare Pages
+  — overlay (same document for everyone, Flutter hydrates after) and bot
+  routing (User-Agent, which none of the three can express in their static
+  rewrite file). The formats were read from those hosts' docs rather than
+  remembered. User-agent sniffing is fragile and Google documents dynamic
+  rendering as a workaround, not a recommendation; serving divergent copy
+  is cloaking. Overlay costs a flash of static markup and a snapshot frozen
+  at build time. The guide says both so a reader can choose.
+
 ## 1.3.6
 
 - The example falls back to the committed fixtures when no build is present,

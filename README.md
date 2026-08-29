@@ -92,8 +92,9 @@ void main() {
 ```
 
 **2. Serve deep routes from your host.** `/beans/kenya` has to return the
-generated file for that path. Any static host can do it; the shape is the same
-as any single-page app deployment.
+generated file for that path. Overlay the prerendered HTML onto `build/web`
+and add that host's SPA fallback; the configs for Firebase Hosting, Netlify,
+and Cloudflare Pages are in [`doc/serving.md`](doc/serving.md).
 
 `flutter_prerender` loads each route of a `flutter build web` output in headless
 Chrome, enables Flutter's accessibility tree, and writes a static HTML document
@@ -228,7 +229,8 @@ crawlers from being sent to a URL that would 404.
 
 `build/prerendered/` holds one `index.html` per route plus `sitemap.xml`. It
 does not contain the app's JavaScript and wasm assets. Serve it alongside
-`build/web` rather than instead of it. Two common topologies:
+`build/web` rather than instead of it. Two topologies, and they are not
+equivalent:
 
 **Overlay.** Lay the prerendered HTML over the build so each route's
 `index.html` is the crawlable one and every other asset comes from `build/web`:
@@ -238,14 +240,26 @@ cp -r build/web/. deploy/
 cp -r build/prerendered/. deploy/
 ```
 
-Visitors with JavaScript boot the app from that same page (the generated HTML
-loads `/flutter_bootstrap.js` and removes the static fallback once the app is
-up); crawlers read the static content. This is why the default bootstrap `src`
-is the absolute `/flutter_bootstrap.js`; a relative path would 404 on a deep
-route like `/beans/kenya`.
+Every client receives that same document. Visitors with JavaScript boot the app
+from it (the generated HTML loads `/flutter_bootstrap.js` and removes the
+static fallback once the app is up); crawlers read the static content. This is
+why the default bootstrap `src` is the absolute `/flutter_bootstrap.js`; a
+relative path would 404 on a deep route like `/beans/kenya`.
 
-**Bot routing.** Serve the SPA to humans and the prerendered HTML to crawlers,
-keyed on the user agent. For nginx:
+**Bot routing.** Serve the SPA shell to humans and the prerendered HTML to
+crawlers, keyed on `User-Agent`. Google calls this dynamic rendering and
+documents it as a workaround, not a recommendation. The list of crawlers
+rots; a bot you did not name still sees the empty canvas. Serving *different*
+copy to Googlebot than to a user is cloaking. Serving the same snapshot in
+HTML instead of a canvas is the similar-content case they still accept. The
+parity guard is how you stay on that side.
+
+Firebase Hosting, Netlify, and Cloudflare Pages cannot branch on `User-Agent`
+in their static rewrite files. Overlay is the rewrite; bot routing is a
+function. Exact files, the host docs they were read from, and the rest of the
+trade-off: [`doc/serving.md`](doc/serving.md).
+
+For a generic nginx:
 
 ```nginx
 map $http_user_agent $is_bot {

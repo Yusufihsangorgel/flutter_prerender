@@ -62,7 +62,8 @@ jobs:
           cp -r build/web/. deploy/
           cp -r build/prerendered/. deploy/
 
-      # Swap this for Pages, S3, Firebase, or whatever hosts the site.
+      # Overlay is the deploy directory. Host-specific rewrite files
+      # (Firebase, Netlify, Cloudflare Pages) are in doc/serving.md.
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
         with:

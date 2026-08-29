@@ -96,7 +96,8 @@ replaces an existing `robots.txt` in the output. Sitemap write needs
 - **Assuming crawl is on.** Symptom: only listed routes exist under `--out`.
   Fix: pass `--crawl` or list every path.
 - **Deploying `--out` without `build/web`.** Symptom: JS/wasm 404. Overlay
-  prerendered HTML onto the web build.
+  prerendered HTML onto the web build. Firebase Hosting, Netlify, and
+  Cloudflare Pages configs: `doc/serving.md`.
 - **Routes as `https://…`.** Symptom: `ConfigException`, exit 1. Paths only.
 
 ## Layout
@@ -111,6 +112,7 @@ replaces an existing `robots.txt` in the output. Sitemap write needs
   `sitemap.dart`, `robots.dart`, `static_server.dart`, `source_head.dart`,
   `exceptions.dart`
 - `example/` — sample app, `flutter_prerender.yaml`, `routes.txt`
+- `doc/serving.md` — Firebase Hosting, Netlify, Cloudflare Pages
 - `action.yml` — composite Action (same flag names as the CLI)
 - `test/` — unit tests; `test/e2e_test.dart` is tagged `e2e`
 

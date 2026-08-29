@@ -1,0 +1,9 @@
+[build]
+  publish = "deploy"
+
+# History-API fallback for paths the prerender did not write. Shadowing
+# keeps /about/index.html in front of this rule.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

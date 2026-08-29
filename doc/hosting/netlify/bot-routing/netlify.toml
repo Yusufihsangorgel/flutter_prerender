@@ -1,0 +1,25 @@
+[build]
+  publish = "deploy"
+
+[[redirects]]
+  from = "/*"
+  to = "/__spa/index.html"
+  status = 200
+
+[[edge_functions]]
+  function = "prerender-bots"
+  path = "/*"
+  excludedPath = [
+    "/__prerendered/*",
+    "/__spa/*",
+    "/assets/*",
+    "/canvaskit/*",
+    "/icons/*",
+    "/flutter.js",
+    "/flutter_bootstrap.js",
+    "/flutter_service_worker.js",
+    "/manifest.json",
+    "/favicon.png",
+    "/sitemap.xml",
+    "/robots.txt",
+  ]

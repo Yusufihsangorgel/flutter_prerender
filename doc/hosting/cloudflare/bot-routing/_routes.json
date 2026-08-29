@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": [
+    "/assets/*",
+    "/canvaskit/*",
+    "/icons/*",
+    "/*.js",
+    "/*.mjs",
+    "/*.wasm",
+    "/manifest.json",
+    "/favicon.png",
+    "/sitemap.xml",
+    "/robots.txt",
+    "/__prerendered/*",
+    "/__spa/*"
+  ]
+}

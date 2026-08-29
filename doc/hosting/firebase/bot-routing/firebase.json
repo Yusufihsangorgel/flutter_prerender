@@ -1,0 +1,17 @@
+{
+  "hosting": {
+    "public": "deploy",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "trailingSlash": false,
+    "rewrites": [
+      {
+        "source": "**",
+        "function": {
+          "functionId": "servePrerender",
+          "region": "us-central1",
+          "pinTag": true
+        }
+      }
+    ]
+  }
+}
