@@ -1,0 +1,18 @@
+# flutter_prerender
+
+Command-line tool that prerenders a Flutter web app to static, crawlable HTML for SEO. Loads each route in headless Chrome and emits headings, links, meta, and a sitemap.
+
+pub.dev: https://pub.dev/packages/flutter_prerender
+source: https://github.com/Yusufihsangorgel/flutter_prerender
+
+## Before you call it
+
+AGENTS.md in the repository root is written for you. It carries the contracts that are easy to get wrong — what must be awaited or disposed, what throws and when, and the mistakes whose symptom is silence rather than an error — along with the shortest correct usage taken from a runnable example.
+
+It also says when NOT to reach for this package. Read that part before adding the dependency.
+
+## Layout
+
+- `lib/` — public API
+- `example/` — runnable examples
+- `test/` — the suite; `dart test` (or `flutter test`) runs it
