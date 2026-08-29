@@ -1,0 +1,70 @@
+# Copy this into your Flutter app as `.github/workflows/prerender.yml`.
+# It is an example for *your* pipeline, not the CI of the flutter_prerender
+# repository.
+#
+# Sequence: flutter build web → prerender → overlay → deploy.
+#
+# `--out` is only the static HTML (and sitemap). The JS and wasm stay in
+# `build/web`. Overlay the two so crawlers get the prerendered page and
+# visitors still boot the app.
+#
+# `--fail-on-empty` is the CI gate. A route that recovers no content, or
+# fails to capture, exits 3 and fails the job. Without it the tool exits 0
+# even when a page came out empty.
+#
+# Flag names match `flutter_prerender --help` (`lib/src/cli.dart`).
+
+name: Build, prerender, deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Build
+        run: flutter build web
+
+      # Do not add flutter_prerender to the app's pubspec. Activate it as a
+      # CLI, the same as on a developer machine.
+      - name: Activate flutter_prerender
+        run: dart pub global activate flutter_prerender
+
+      - name: Prerender
+        run: |
+          flutter_prerender \
+            --build-dir build/web \
+            --routes routes.txt \
+            --out build/prerendered \
+            --base-url https://example.com \
+            --sitemap \
+            --fail-on-empty \
+            --chrome /usr/bin/google-chrome
+
+      # `--fail-on-empty` → exit 3 when any route recovers zero content nodes
+      # or capture throws. Other exits this job can see:
+      #   0  success
+      #   1  config / missing build / Chrome failed to launch
+      #   2  `--fail-on-parity` and the guard flagged a page
+      #   4  every non-root route collapsed onto / (hash URL strategy)
+
+      - name: Overlay prerendered HTML onto the web build
+        run: |
+          mkdir -p deploy
+          cp -r build/web/. deploy/
+          cp -r build/prerendered/. deploy/
+
+      # Swap this for Pages, S3, Firebase, or whatever hosts the site.
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: deploy
