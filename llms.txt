@@ -7,13 +7,35 @@ source: https://github.com/Yusufihsangorgel/flutter_prerender
 
 ## Before you call it
 
-AGENTS.md in the repository root is written for you. It carries the contracts that are easy to get wrong — what must be awaited or disposed, what throws and when, and the mistakes whose symptom is silence rather than an error — along with the shortest correct usage taken from a runnable example.
+This is a build-time command, not a Flutter widget or runtime dependency. Do not add it to the target app and do not import it there. Activate the executable globally, build the app, then point the tool at the directory containing the built `index.html`:
 
-It also says when NOT to reach for this package. Read that part before adding the dependency.
+    dart pub global activate flutter_prerender
+    flutter build web
+    flutter_prerender --build-dir build/web --routes routes.txt \
+      --out build/prerendered --base-url https://example.com
+
+From a checkout of this repository, use `dart run flutter_prerender` in place of the global executable. A `flutter_prerender.yaml` in the working directory is loaded automatically; `-c` selects another file and CLI flags override it. `--crawl` follows recovered same-origin links from the configured routes, or from `/` when no seed is given.
+
+AGENTS.md in the repository root is the operational reference. It records defaults, exit codes, route rules, disposal requirements, the difference between an empty and a failed capture, hash-routing collapse, source-head preservation, stale-output behavior, and the limits of the parity guard.
+
+The output directory is not a replacement for `build/web`: it contains route HTML and optional sitemap/robots files, not the app's JavaScript or wasm. Overlay it on the web build or use one of the serving patterns in `doc/serving.md`. The snapshot covers anonymous first paint only; it cannot recover content behind login, a tap, a scroll, or data that changed after the run. The target must use path URL strategy; a default hash-routed app collapses routes and exits 4.
+
+`--fail-on-empty` is the primary CI gate. It exits 3 for either a route with zero recovered nodes or a `RouteCaptureException` recorded in `failedRoutes`. `--fail-on-parity` is separate and exits 2. The parity guard detects generated words absent from Flutter's accessibility text; it does not prove complete canvas coverage, ranking, or traffic.
+
+The exported `package:flutter_prerender/flutter_prerender.dart` library exposes config, capture, extraction, HTML, parity, sitemap/robots, source-head, static-server and engine types for build tooling. Direct callers must provide a serving base URI, close the `PageCapturer` and any `StaticServer` they create, and read the built `index.html` then pass its HTML text to `SourceHead.parse` if they want the build's base href, manifest, icons and other retained head elements. `SourceHead.parse` does not read a path. Most consumers should use `runCli` or the executable.
 
 ## Layout
 
-- `lib/` — public API
-- `example/` — runnable examples
+- `bin/flutter_prerender.dart` — executable entry point
+- `lib/flutter_prerender.dart` — exported programmatic API; most consumers use the command
+- `lib/src/cli.dart` — parser, config layering and process exit codes
+- `lib/src/engine.dart` — route queue, capture results, output writes and sitemap/robots orchestration
+- `lib/src/browser.dart` — headless Chrome capture and Flutter accessibility activation
+- `lib/src/config.dart`, `route_meta.dart`, `routes.dart` — YAML, metadata and safe route normalization/discovery
+- `lib/src/semantics_extractor.dart`, `content_node.dart`, `html_builder.dart` — semantics-to-static-HTML pipeline
+- `lib/src/parity.dart` — injection-oriented parity report
+- `lib/src/source_head.dart`, `static_server.dart` — retain the build head and serve SPA routes locally
+- `example/` — Flutter app, config, routes and committed before/after fixtures
 - `doc/serving.md` — how to serve the prerendered HTML on Firebase Hosting, Netlify, and Cloudflare Pages
-- `test/` — the suite; `dart test` (or `flutter test`) runs it
+- `tool/measure_crawler_fetch.dart` — HTTP/no-JavaScript check behind the 1.5.0 README measurements; it does not measure search ranking
+- `test/` — run `dart test --exclude-tags e2e`; the tagged e2e test requires Chrome and a built example

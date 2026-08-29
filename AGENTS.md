@@ -9,8 +9,9 @@ globally and run the `flutter_prerender` executable against a web build.
 The tool loads each route of a `flutter build web` output in headless Chrome,
 enables Flutter's accessibility tree, and writes one static HTML file per
 route (real `<h1>`/`<p>`/`<a>`, title, meta, Open Graph, optional JSON-LD
-and `sitemap.xml`). Visitors with JavaScript still boot the original app;
-crawlers that never run it read the static markup.
+and `sitemap.xml`). By default visitors with JavaScript still boot the
+original app; crawlers that never run it read the static markup. Turning off
+`appScript` / passing `--no-app-script` produces a static-only document.
 
 It does not prerender from Dart sources, does not capture content behind
 login, a tap, or a scroll, does not re-snapshot live data, and does not copy
@@ -44,10 +45,23 @@ browser.
 `BuildNotFoundException`, exit 1. `StaticServer` serves that directory to
 the browser; unknown paths fall back to `index.html`. Output is
 `--out`/`outDir` (default `build/prerendered`): `/` → `index.html`,
-`/about` → `about/index.html`.
+`/about` → `about/index.html`. The engine creates the output directory but
+does not empty it; remove or replace stale route files as part of deployment.
+`--dry-run` still requires routes (unless `--crawl` is set), but it does not
+require the build to exist and does not launch Chrome.
+
+**Source head.** The CLI parses the built `index.html` with `SourceHead`.
+Generated per-route SEO wins, while the build's base href, manifest, icons,
+theme metadata, styles and other non-generated head elements are carried into
+each page. Inline scripts are deliberately dropped. If calling
+`PrerenderEngine` directly, pass a parsed `SourceHead` yourself or those build
+head elements are not preserved.
 
 **Browser.** Capture is `PuppeteerCapturer`. No Chrome →
-`BrowserLaunchException`, exit 1. Pass `--chrome`.
+`BrowserLaunchException`, exit 1. Pass `--chrome`. `runCli` closes both the
+capturer and its temporary `StaticServer` in a `finally`; direct API callers
+own the resources they create and must close them. `PuppeteerCapturer.capture`
+closes each page, but the browser stays alive until `close()`.
 
 **Route discovery.** Without `--crawl`, only named routes run. Sources:
 `--routes` / `parseRoutesFile` (paths only, not absolute URLs); YAML
@@ -57,11 +71,12 @@ the browser; unknown paths fall back to `index.html`. Output is
 `#fragment` links are dropped. A route with no inbound link still has to be
 listed. Empty routes and no `--crawl` → `ConfigException`, exit 1.
 
-**Exit codes** (`runCli`): 0 success / `--help` / `--version` / `--dry-run`;
-1 `PrerenderException` (config, missing build, browser launch); 2
-`--fail-on-parity` and `hasParityWarnings`; 3 `--fail-on-empty` and
-(`hasEmptyRoutes` or `hasFailedRoutes`); 4 `collapsedOntoRoot`; 64 unknown
-flag (`FormatException`).
+**Exit codes** (`runCli`): 0 success / `--help` / `--version` / valid
+`--dry-run`; 1 `PrerenderException` (config, missing build, browser launch);
+2 `--fail-on-parity` and `hasParityWarnings`; 3 `--fail-on-empty` and
+(`hasEmptyRoutes` or `hasFailedRoutes`); 4 `collapsedOntoRoot`; 64 CLI parser
+failure, including an unknown flag. Checks after rendering are ordered 4, 2,
+3, so collapse wins if more than one condition is true.
 
 **`--fail-on-empty`.** This is the CI gate. `PrerenderConfig.failOnEmpty`
 defaults false, so an empty or failed route still exits 0. The flag fails
@@ -77,7 +92,16 @@ page. The tool writes the files and exits 4 (`collapsedOntoRoot`). Call
 
 **`robots.txt`.** `--robots` / `generateRobots` is off by default and never
 replaces an existing `robots.txt` in the output. Sitemap write needs
-`--base-url`; default `generateSitemap` is true.
+`--base-url`; default `generateSitemap` is true. The sitemap contains the
+routes actually written, including crawl discoveries, and omits failed
+captures. With no successful route, or no base URL, no sitemap is written.
+
+**Direct library use.** `lib/flutter_prerender.dart` exports the whole
+pipeline, but it is for a separate build script or tooling package, not an
+import inside the Flutter app. `PrerenderEngine.run` neither checks for a web
+build nor starts/closes a server or capturer; those conveniences belong to
+`runCli`. Capture failures represented by `RouteCaptureException` are recorded
+in `PrerenderResult.failedRoutes` and do not abort the remaining queue.
 
 ## Mistakes
 
@@ -98,6 +122,10 @@ replaces an existing `robots.txt` in the output. Sitemap write needs
 - **Deploying `--out` without `build/web`.** Symptom: JS/wasm 404. Overlay
   prerendered HTML onto the web build. Firebase Hosting, Netlify, and
   Cloudflare Pages configs: `doc/serving.md`.
+- **Reusing a dirty output directory.** Symptom: a route removed from config
+  is still deployable, or an old sitemap/robots file survives. The engine
+  overwrites files it generates in this run; it does not reconcile or delete
+  files from an earlier run.
 - **Routes as `https://…`.** Symptom: `ConfigException`, exit 1. Paths only.
 
 ## Layout
@@ -114,11 +142,16 @@ replaces an existing `robots.txt` in the output. Sitemap write needs
 - `example/` — sample app, `flutter_prerender.yaml`, `routes.txt`
 - `doc/serving.md` — Firebase Hosting, Netlify, Cloudflare Pages
 - `action.yml` — composite Action (same flag names as the CLI)
+- `tool/measure_crawler_fetch.dart` — serves and fetches the before/after
+  example documents without JavaScript; exit 69 if either input is missing,
+  exit 1 if required prerendered content is absent
+- `tool/crawler_view_figure.dart` — redraws the committed comparison figure
 - `test/` — unit tests; `test/e2e_test.dart` is tagged `e2e`
 
 Tests, from the repo root (example is a Flutter app; skip it):
 
-    dart pub get --no-example
+    dart pub get
+    dart format .
     dart analyze
     dart test --exclude-tags e2e
 
@@ -131,6 +164,16 @@ Example without a build, from the repo root:
 
 Falls back to `example/web/index.html` and
 `example/expected_output/index.html` when `example/build/` is absent.
+
+The HTTP measurement does not fall back; build and prerender first:
+
+    cd example && flutter build web
+    cd ..
+    dart run flutter_prerender \
+      --config example/flutter_prerender.yaml \
+      --build-dir example/build/web \
+      --out example/build/prerendered
+    dart run tool/measure_crawler_fetch.dart
 
 To prerender the example from this checkout:
 
