@@ -158,8 +158,9 @@ void main() {
     );
     final result = await engine.run(baseUri);
     expect(result.runWarnings.join(), isNot(contains('404')));
-    final html = File(p.join(outDir.path, 'beans', 'kenya', 'index.html'))
-        .readAsStringSync();
+    final html = File(
+      p.join(outDir.path, 'beans', 'kenya', 'index.html'),
+    ).readAsStringSync();
     expect(html, contains('src="/flutter_bootstrap.js"'));
   });
 }

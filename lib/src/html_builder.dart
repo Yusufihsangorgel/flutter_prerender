@@ -161,9 +161,9 @@ final class HtmlBuilder {
   void _writeJsonLd(StringBuffer buffer, Map<String, Object?>? jsonLd) {
     if (jsonLd == null || jsonLd.isEmpty) return;
     // Escape "<" so a value cannot terminate the surrounding <script> element.
-    final encoded = const JsonEncoder.withIndent('  ')
-        .convert(jsonLd)
-        .replaceAll('<', '\\u003c');
+    final encoded = const JsonEncoder.withIndent(
+      '  ',
+    ).convert(jsonLd).replaceAll('<', '\\u003c');
     buffer
       ..writeln('  <script type="application/ld+json">')
       ..writeln(encoded)
