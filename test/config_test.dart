@@ -89,6 +89,56 @@ routes:
     );
   });
 
+  test('rejects non-mapping defaults', () {
+    expect(
+      () => PrerenderConfig.fromYaml('defaults: invalid'),
+      throwsA(isA<ConfigException>()),
+    );
+  });
+
+  test('rejects non-string metadata in defaults', () {
+    expect(
+      () => PrerenderConfig.fromYaml('defaults:\n  title: 123'),
+      throwsA(isA<ConfigException>()),
+    );
+  });
+
+  test('rejects non-string metadata under routes', () {
+    expect(
+      () => PrerenderConfig.fromYaml('routes:\n  - path: /\n    title: 123'),
+      throwsA(isA<ConfigException>()),
+    );
+  });
+
+  for (final key in const ['jsonLd', 'json_ld']) {
+    test('rejects non-mapping $key in defaults', () {
+      expect(
+        () => PrerenderConfig.fromYaml('defaults:\n  $key: invalid'),
+        throwsA(
+          isA<ConfigException>().having(
+            (exception) => exception.message,
+            'message',
+            contains('"$key"'),
+          ),
+        ),
+      );
+    });
+
+    test('rejects non-mapping $key under routes', () {
+      expect(
+        () =>
+            PrerenderConfig.fromYaml('routes:\n  - path: /\n    $key: invalid'),
+        throwsA(
+          isA<ConfigException>().having(
+            (exception) => exception.message,
+            'message',
+            contains('"$key"'),
+          ),
+        ),
+      );
+    });
+  }
+
   test('parity accepts a boolean shorthand', () {
     final config = PrerenderConfig.fromYaml('parity: false');
     expect(config.parityCheck, isFalse);

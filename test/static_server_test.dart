@@ -69,5 +69,23 @@ void main() {
       final body = await response.transform(systemEncoding.decoder).join();
       expect(body, contains('<h1>Home</h1>'));
     });
+
+    test('handles a client disconnect while streaming an asset', () async {
+      File(
+        p.join(dir.path, 'large.bin'),
+      ).writeAsBytesSync(List<int>.filled(8 * 1024 * 1024, 0));
+      final client = HttpClient();
+      addTearDown(() => client.close(force: true));
+      final request = await client.getUrl(server.baseUri.resolve('/large.bin'));
+      final response = await request.close();
+      await response.listen((_) {}).cancel();
+
+      final nextRequest = await client.getUrl(
+        server.baseUri.resolve('/main.dart.js'),
+      );
+      final nextResponse = await nextRequest.close();
+      expect(nextResponse.statusCode, HttpStatus.ok);
+      await nextResponse.drain<void>();
+    });
   });
 }

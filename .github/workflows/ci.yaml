@@ -22,9 +22,11 @@ jobs:
       - name: Install dependencies
         run: dart pub get --no-example
       - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed lib test bin
+        run: >-
+          dart format --output=none --set-exit-if-changed
+          lib test bin tool example/what_a_crawler_sees.dart
       - name: Analyze
-        run: dart analyze --fatal-infos lib test bin
+        run: dart analyze --fatal-infos lib test bin tool
       - name: Run tests
         run: dart test --exclude-tags e2e
 
@@ -43,6 +45,10 @@ jobs:
         run: |
           flutter pub get
           flutter build web
+
+      - name: Analyze the standalone crawler example
+        working-directory: example
+        run: flutter analyze what_a_crawler_sees.dart
 
       # The action installs from pub.dev by default; here it must exercise the
       # code in this checkout, so put that on PATH first and skip the install.

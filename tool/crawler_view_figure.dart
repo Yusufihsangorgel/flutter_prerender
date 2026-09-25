@@ -13,15 +13,15 @@
 // example's own test asserts against. If either changes, the figure changes.
 import 'dart:io';
 
-const bg = '#14161C';
-const panel = '#1b1f28';
-const ink = '#d8dee9';
-const dim = '#8b93a3';
-const edge = '#39414f';
-const empty = '#ff8f6b';
-const filled = '#8ee0a1';
+const _bg = '#14161C';
+const _panel = '#1b1f28';
+const _ink = '#d8dee9';
+const _dim = '#8b93a3';
+const _edge = '#39414f';
+const _empty = '#ff8f6b';
+const _filled = '#8ee0a1';
 
-typedef Seen = ({
+typedef _Seen = ({
   int words,
   int headings,
   int links,
@@ -30,7 +30,7 @@ typedef Seen = ({
 });
 
 /// Reads a page the way a crawler reads it: markup out, text in.
-Seen crawl(String path) {
+_Seen _crawl(String path) {
   final html = File(path).readAsStringSync();
   final body = RegExp(
     r'<body[^>]*>(.*?)</body>',
@@ -70,14 +70,14 @@ List<String> _wrap(List<String> words, int width) {
   return lines;
 }
 
-String escape(String s) =>
+String _escape(String s) =>
     s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 
-String panelSvg(double x, String heading, Seen seen, String accent) {
+String _panelSvg(double x, String heading, _Seen seen, String accent) {
   const w = 360.0, top = 74.0, h = 250.0;
   final b = StringBuffer()
     ..writeln(
-      '  <text x="$x" y="34" fill="$ink" font-size="14" '
+      '  <text x="$x" y="34" fill="$_ink" font-size="14" '
       'font-family="Menlo, monospace">$heading</text>',
     )
     ..writeln(
@@ -87,17 +87,17 @@ String panelSvg(double x, String heading, Seen seen, String accent) {
       '${seen.links} links</text>',
     )
     ..writeln(
-      '  <rect x="$x" y="$top" width="$w" height="$h" fill="$panel" '
-      'stroke="$edge" stroke-width="1.2" rx="4"/>',
+      '  <rect x="$x" y="$top" width="$w" height="$h" fill="$_panel" '
+      'stroke="$_edge" stroke-width="1.2" rx="4"/>',
     )
     ..writeln(
-      '  <text x="${x + 14}" y="${top + 26}" fill="$dim" '
+      '  <text x="${x + 14}" y="${top + 26}" fill="$_dim" '
       'font-size="10.5" font-family="Menlo, monospace">'
-      '&lt;title&gt; ${escape(seen.title.length > 40 ? "${seen.title.substring(0, 40)}…" : seen.title)}</text>',
+      '&lt;title&gt; ${_escape(seen.title.length > 40 ? "${seen.title.substring(0, 40)}…" : seen.title)}</text>',
     )
     ..writeln(
       '  <line x1="${x + 14}" y1="${top + 38}" x2="${x + w - 14}" '
-      'y2="${top + 38}" stroke="$edge" stroke-width="1"/>',
+      'y2="${top + 38}" stroke="$_edge" stroke-width="1"/>',
     );
 
   if (seen.words == 0) {
@@ -108,7 +108,7 @@ String panelSvg(double x, String heading, Seen seen, String accent) {
         'text-anchor="middle">nothing to read</text>',
       )
       ..writeln(
-        '  <text x="${x + w / 2}" y="${top + 152}" fill="$dim" '
+        '  <text x="${x + w / 2}" y="${top + 152}" fill="$_dim" '
         'font-size="11" font-family="Menlo, monospace" '
         'text-anchor="middle">the body holds one script tag</text>',
       );
@@ -116,13 +116,13 @@ String panelSvg(double x, String heading, Seen seen, String accent) {
     var y = top + 62;
     for (final line in seen.lines) {
       b.writeln(
-        '  <text x="${x + 14}" y="$y" fill="$ink" font-size="11" '
-        'font-family="Menlo, monospace">${escape(line)}</text>',
+        '  <text x="${x + 14}" y="$y" fill="$_ink" font-size="11" '
+        'font-family="Menlo, monospace">${_escape(line)}</text>',
       );
       y += 17;
     }
     b.writeln(
-      '  <text x="${x + 14}" y="${y + 8}" fill="$dim" font-size="10.5" '
+      '  <text x="${x + 14}" y="${y + 8}" fill="$_dim" font-size="10.5" '
       'font-family="Menlo, monospace">…</text>',
     );
   }
@@ -130,8 +130,8 @@ String panelSvg(double x, String heading, Seen seen, String accent) {
 }
 
 void main() {
-  final before = crawl('example/web/index.html');
-  final after = crawl('example/expected_output/index.html');
+  final before = _crawl('example/web/index.html');
+  final after = _crawl('example/expected_output/index.html');
 
   const left = 40.0, gap = 44.0, panelW = 360.0;
   final width = left * 2 + panelW * 2 + gap;
@@ -143,13 +143,13 @@ void main() {
       'width="${width.toStringAsFixed(0)}" height="${height.toInt()}" '
       'viewBox="0 0 ${width.toStringAsFixed(0)} ${height.toInt()}">',
     )
-    ..writeln('  <rect width="100%" height="100%" fill="$bg"/>')
-    ..write(panelSvg(left, 'what a crawler fetches today', before, empty))
+    ..writeln('  <rect width="100%" height="100%" fill="$_bg"/>')
+    ..write(_panelSvg(left, 'what a crawler fetches today', before, _empty))
     ..write(
-      panelSvg(left + panelW + gap, 'after flutter_prerender', after, filled),
+      _panelSvg(left + panelW + gap, 'after flutter_prerender', after, _filled),
     )
     ..writeln(
-      '  <text x="${width / 2}" y="366" fill="$dim" font-size="11" '
+      '  <text x="${width / 2}" y="366" fill="$_dim" font-size="11" '
       'font-family="Menlo, monospace" text-anchor="middle">'
       'both panels are read from files in this repository: the shell '
       '`flutter build web` writes, and the page this tool writes</text>',

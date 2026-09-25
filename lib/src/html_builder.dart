@@ -213,14 +213,9 @@ final class HtmlBuilder {
     };
   }
 
-  static String _text(String value) => value
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;');
+  static String _text(String value) =>
+      const HtmlEscape(HtmlEscapeMode.element).convert(value);
 
-  static String _attr(String value) => value
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;');
+  static String _attr(String value) =>
+      const HtmlEscape(HtmlEscapeMode.attribute).convert(value);
 }

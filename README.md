@@ -233,6 +233,17 @@ dart run flutter_prerender -c flutter_prerender.yaml
 CLI flags override the config file. See `flutter_prerender --help` for the full
 list. A full example lives in [`example/`](example/).
 
+### Exit codes
+
+| Code | Meaning |
+| ---: | --- |
+| 0 | The run completed successfully. |
+| 1 | A prerender error occurred. |
+| 2 | `--fail-on-parity` found a parity warning. |
+| 3 | `--fail-on-empty` found an empty or failed route. |
+| 4 | Every route other than `/` produced the root route's content. |
+| 64 | Command-line arguments are invalid. |
+
 ## Crawling
 
 Listing every route by hand does not scale. Pass `--crawl` and the tool starts

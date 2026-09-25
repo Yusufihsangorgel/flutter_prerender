@@ -1,6 +1,7 @@
 import 'package:puppeteer/puppeteer.dart';
 
 import 'exceptions.dart';
+import 'flutter_labels.dart';
 
 /// The raw material recovered from one loaded route: the document title, the
 /// serialised Flutter semantics DOM, and the app's rendered text.
@@ -38,6 +39,15 @@ abstract interface class PageCapturer {
 
 /// A [PageCapturer] backed by `package:puppeteer` and headless Chrome.
 final class PuppeteerCapturer implements PageCapturer {
+  // Chromium cannot start its sandbox as root, which is common in CI containers.
+  static const List<String> _chromeLaunchArgs = <String>['--no-sandbox'];
+
+  // Flutter may attach its semantics control shortly after the view appears.
+  static const Duration _initialSemanticsDelay = Duration(milliseconds: 300);
+
+  // Leave time for each accessibility-tree update before checking again.
+  static const Duration _semanticsPollDelay = Duration(milliseconds: 350);
+
   /// Creates a capturer.
   ///
   /// [executablePath] points at a Chrome/Chromium binary; when `null`,
@@ -72,7 +82,8 @@ final class PuppeteerCapturer implements PageCapturer {
 
   static const String _enableAccessibilityJs =
       '() => { const b = document.querySelector('
-      "'[aria-label=\"Enable accessibility\"]'); if (b) { b.click(); } }";
+      "'[aria-label=\"$flutterAccessibilityToggleLabel\"]'); "
+      'if (b) { b.click(); } }';
 
   static const String _innerTextLenJs =
       '() => (document.body && document.body.innerText '
@@ -96,7 +107,7 @@ final class PuppeteerCapturer implements PageCapturer {
       final browser = await puppeteer.launch(
         headless: true,
         executablePath: executablePath,
-        args: const <String>['--no-sandbox'],
+        args: _chromeLaunchArgs,
       );
       _browser = browser;
       return browser;
@@ -155,17 +166,17 @@ final class PuppeteerCapturer implements PageCapturer {
     }
   }
 
-  /// Clicks the engine's "Enable accessibility" placeholder and polls until the
-  /// semantics tree has populated the DOM with readable text.
+  /// Clicks [flutterAccessibilityToggleLabel] and polls until the semantics
+  /// tree has populated the DOM with readable text.
   ///
   /// The click is retried because the placeholder may not be mounted the moment
   /// the app's view appears, and the tree fills in asynchronously.
   Future<void> _enableSemantics(Page page) async {
     final deadline = DateTime.now().add(semanticsTimeout);
-    await Future<void>.delayed(const Duration(milliseconds: 300));
+    await Future<void>.delayed(_initialSemanticsDelay);
     while (DateTime.now().isBefore(deadline)) {
       await page.evaluate<void>(_enableAccessibilityJs);
-      await Future<void>.delayed(const Duration(milliseconds: 350));
+      await Future<void>.delayed(_semanticsPollDelay);
       final length = await page.evaluate<Object?>(_innerTextLenJs);
       final chars = length is num ? length.toInt() : 0;
       if (chars > 0) return;

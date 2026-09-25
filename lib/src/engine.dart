@@ -23,6 +23,7 @@ final class RouteResult {
     required this.outputPath,
     required this.nodeCount,
     required this.byteCount,
+    this.duplicateOf,
     this.parity,
     this.warnings = const <String>[],
   });
@@ -38,6 +39,9 @@ final class RouteResult {
 
   /// The size of the written HTML file in bytes.
   final int byteCount;
+
+  /// The first route with the same recovered content, or `null` when unique.
+  final String? duplicateOf;
 
   /// The content-parity report, or `null` if the guard was disabled.
   final ParityReport? parity;
@@ -112,9 +116,7 @@ final class PrerenderResult {
   bool get collapsedOntoRoot {
     final nonRoot = routes.where((r) => r.path != '/').toList();
     if (nonRoot.isEmpty) return false;
-    return nonRoot.every(
-      (r) => r.warnings.any((w) => w.startsWith('produced the same content')),
-    );
+    return nonRoot.every((r) => r.duplicateOf != null);
   }
 
   /// Every warning from the run, run-level first, then per-route.
@@ -312,6 +314,7 @@ final class PrerenderEngine {
 
     final warnings = <String>[];
     ParityReport? parity;
+    String? duplicateOf;
     if (nodes.isEmpty) {
       warnings.add(
         'no crawlable content recovered; check --build-dir and that this '
@@ -321,6 +324,7 @@ final class PrerenderEngine {
       final signature = _signature(nodes);
       final firstSeen = signatureToRoute[signature];
       if (firstSeen != null) {
+        duplicateOf = firstSeen;
         warnings.add(
           'produced the same content as $firstSeen. The app is serving one '
           'page for every path, which almost always means Flutter web is on '
@@ -355,6 +359,7 @@ final class PrerenderEngine {
         outputPath: file.path,
         nodeCount: nodes.length,
         byteCount: file.lengthSync(),
+        duplicateOf: duplicateOf,
         parity: parity,
         warnings: warnings,
       ),

@@ -2,6 +2,7 @@ import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 
 import 'content_node.dart';
+import 'flutter_labels.dart';
 
 /// Recovers an ordered list of [ContentNode]s from the HTML of a Flutter
 /// semantics tree (`<flt-semantics-host>` and its descendants).
@@ -27,7 +28,7 @@ final class SemanticsExtractor {
           label.toLowerCase(),
       };
 
-  static const Set<String> _defaultIgnored = {'Enable accessibility'};
+  static const Set<String> _defaultIgnored = {flutterAccessibilityToggleLabel};
 
   final Set<String> _ignored;
 

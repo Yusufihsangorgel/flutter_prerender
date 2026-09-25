@@ -65,9 +65,11 @@ final class PrerenderConfig {
 
   /// Builds a [PrerenderConfig] from a decoded map.
   factory PrerenderConfig.fromMap(Map<String, Object?> map) {
+    const defaults = PrerenderConfig();
     // `parity` may be a boolean shorthand (`parity: false`) or a mapping with
     // `enabled`/`threshold`/`failOn`.
     final parity = map['parity'];
+    final rawDefaults = map['defaults'];
     bool? parityShorthand;
     Map<String, Object?> parityMap = const <String, Object?>{};
     if (parity is bool) {
@@ -77,30 +79,36 @@ final class PrerenderConfig {
     } else if (parity != null) {
       throw const ConfigException('"parity" must be a boolean or a mapping.');
     }
+    if (rawDefaults != null && rawDefaults is! Map) {
+      throw const ConfigException('"defaults" must be a mapping.');
+    }
     return PrerenderConfig(
-      buildDir: _string(map, 'buildDir') ?? 'build/web',
-      outDir:
-          _string(map, 'out') ?? _string(map, 'outDir') ?? 'build/prerendered',
+      buildDir: _string(map, 'buildDir') ?? defaults.buildDir,
+      outDir: _string(map, 'out') ?? _string(map, 'outDir') ?? defaults.outDir,
       baseUrl: _string(map, 'baseUrl'),
-      lang: _string(map, 'lang') ?? 'en',
+      lang: _string(map, 'lang') ?? defaults.lang,
       baseHref: _string(map, 'baseHref'),
-      generateSitemap: _bool(map, 'sitemap') ?? true,
-      generateRobots: _bool(map, 'robots') ?? false,
-      includeAppScript: _bool(map, 'appScript') ?? true,
-      appScriptSrc: _string(map, 'appScriptSrc') ?? '/flutter_bootstrap.js',
-      parityCheck: parityShorthand ?? _bool(parityMap, 'enabled') ?? true,
-      parityThreshold: _double(parityMap, 'threshold') ?? 0.9,
-      failOnParity: _bool(parityMap, 'failOn') ?? false,
-      failOnEmpty: _bool(map, 'failOnEmpty') ?? false,
-      waitMs: _int(map, 'waitMs') ?? 4000,
-      port: _int(map, 'port') ?? 0,
+      generateSitemap: _bool(map, 'sitemap') ?? defaults.generateSitemap,
+      generateRobots: _bool(map, 'robots') ?? defaults.generateRobots,
+      includeAppScript: _bool(map, 'appScript') ?? defaults.includeAppScript,
+      appScriptSrc: _string(map, 'appScriptSrc') ?? defaults.appScriptSrc,
+      parityCheck:
+          parityShorthand ??
+          _bool(parityMap, 'enabled') ??
+          defaults.parityCheck,
+      parityThreshold:
+          _double(parityMap, 'threshold') ?? defaults.parityThreshold,
+      failOnParity: _bool(parityMap, 'failOn') ?? defaults.failOnParity,
+      failOnEmpty: _bool(map, 'failOnEmpty') ?? defaults.failOnEmpty,
+      waitMs: _int(map, 'waitMs') ?? defaults.waitMs,
+      port: _int(map, 'port') ?? defaults.port,
       chromeExecutable:
           _string(map, 'chrome') ?? _string(map, 'chromeExecutable'),
-      crawl: _bool(map, 'crawl') ?? false,
-      maxPages: _int(map, 'maxPages') ?? 100,
-      defaults: map['defaults'] is Map
-          ? RouteMeta.fromMap(_toStringMap(map['defaults'] as Map))
-          : const RouteMeta(),
+      crawl: _bool(map, 'crawl') ?? defaults.crawl,
+      maxPages: _int(map, 'maxPages') ?? defaults.maxPages,
+      defaults: rawDefaults is Map
+          ? RouteMeta.fromMap(_toStringMap(rawDefaults))
+          : defaults.defaults,
       routes: _parseRoutes(map['routes']),
     );
   }

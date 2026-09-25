@@ -1,3 +1,14 @@
+## Unreleased
+
+- A route or default metadata value of the wrong type is a `ConfigException`
+  that names the key. It used to surface as a `TypeError` with a stack trace.
+- `RouteResult.duplicateOf` names the route whose content a collapsed route
+  repeated. Exit code 4 reads this field instead of the warning text.
+- The exit codes are named constants, documented once and listed in the
+  README.
+- A client that disconnects while the static server streams an asset no
+  longer causes an uncaught asynchronous I/O error.
+
 ## 1.5.0
 
 - A committed measurement of what a crawler that does not run JavaScript

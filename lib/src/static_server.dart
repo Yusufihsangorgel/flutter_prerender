@@ -42,23 +42,34 @@ final class StaticServer {
 
   Future<void> _handle(HttpRequest request) async {
     final response = request.response;
-    final resolved = resolveWithinRoot(rootDir, request.uri.path);
-    File? file;
-    if (resolved != null) {
-      final candidate = File(resolved);
-      if (candidate.existsSync()) {
-        file = candidate;
+    try {
+      final resolved = resolveWithinRoot(rootDir, request.uri.path);
+      File? file;
+      if (resolved != null) {
+        final candidate = File(resolved);
+        if (candidate.existsSync()) {
+          file = candidate;
+        }
+      }
+      file ??= File(p.join(rootDir, 'index.html'));
+      if (!file.existsSync()) {
+        response.statusCode = HttpStatus.notFound;
+        await response.close();
+        return;
+      }
+      response.headers.contentType = ContentType.parse(
+        contentTypeFor(file.path),
+      );
+      await response.addStream(file.openRead());
+      await response.close();
+    } on IOException {
+      // The client may disconnect while an asset is being streamed.
+      try {
+        await response.close();
+      } on IOException {
+        // The disconnected client cannot receive a response.
       }
     }
-    file ??= File(p.join(rootDir, 'index.html'));
-    if (!file.existsSync()) {
-      response.statusCode = HttpStatus.notFound;
-      await response.close();
-      return;
-    }
-    response.headers.contentType = ContentType.parse(contentTypeFor(file.path));
-    await response.addStream(file.openRead());
-    await response.close();
   }
 }
 

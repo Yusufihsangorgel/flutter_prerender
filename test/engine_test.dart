@@ -110,6 +110,8 @@ void main() {
     final result = await engine.run(baseUri);
     final about = result.routes.firstWhere((r) => r.path == '/about');
     expect(about.warnings.join(), contains('produced the same content as /'));
+    expect(about.duplicateOf, '/');
+    expect(result.collapsedOntoRoot, isTrue);
   });
 
   test('warns when sitemap is requested without a base URL', () async {

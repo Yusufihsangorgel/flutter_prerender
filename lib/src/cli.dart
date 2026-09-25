@@ -15,6 +15,24 @@ import 'static_server.dart';
 /// reads `pubspec.yaml` and fails if this drifts from it.
 const String packageVersion = '1.5.0';
 
+/// Exit code for a successful run, including `--help` and `--version`.
+const int successfulExitCode = 0;
+
+/// Exit code for a [PrerenderException].
+const int prerenderExceptionExitCode = 1;
+
+/// Exit code when `--fail-on-parity` finds a parity warning.
+const int parityFailureExitCode = 2;
+
+/// Exit code when `--fail-on-empty` finds an empty or failed route.
+const int emptyOrFailedRouteExitCode = 3;
+
+/// Exit code when every non-root route duplicates the root route.
+const int collapsedRoutesExitCode = 4;
+
+/// Exit code when command-line arguments are invalid.
+const int badUsageExitCode = 64;
+
 /// The default config file name looked up in the working directory.
 const String defaultConfigFile = 'flutter_prerender.yaml';
 
@@ -120,7 +138,7 @@ Future<int> runCli(
   } on FormatException catch (error) {
     stderrSink.writeln(error.message);
     stderrSink.writeln(parser.usage);
-    return 64;
+    return badUsageExitCode;
   }
 
   if (results.flag('help')) {
@@ -129,11 +147,11 @@ Future<int> runCli(
     );
     stdoutSink.writeln('\nUsage: flutter_prerender [options]\n');
     stdoutSink.writeln(parser.usage);
-    return 0;
+    return successfulExitCode;
   }
   if (results.flag('version')) {
     stdoutSink.writeln('flutter_prerender $packageVersion');
-    return 0;
+    return successfulExitCode;
   }
 
   try {
@@ -154,7 +172,7 @@ Future<int> runCli(
     );
   } on PrerenderException catch (error) {
     stderrSink.writeln('Error: ${error.message}');
-    return 1;
+    return prerenderExceptionExitCode;
   }
 }
 
@@ -221,7 +239,7 @@ Future<int> _execute(
 
   if (dryRun) {
     _printPlan(config, out, buildDir, indexHtml);
-    return 0;
+    return successfulExitCode;
   }
 
   if (!buildDir.existsSync() || !indexHtml.existsSync()) {
@@ -261,13 +279,13 @@ Future<int> _execute(
         'package:flutter_web_plugins/url_strategy.dart in main(), rebuild, '
         'and run this again.',
       );
-      return 4;
+      return collapsedRoutesExitCode;
     }
     if (config.failOnParity && result.hasParityWarnings) {
       err.writeln(
         'Parity guard flagged one or more pages and --fail-on-parity is set.',
       );
-      return 2;
+      return parityFailureExitCode;
     }
     if (config.failOnEmpty &&
         (result.hasEmptyRoutes || result.hasFailedRoutes)) {
@@ -275,9 +293,9 @@ Future<int> _execute(
         'One or more routes recovered no content or failed to capture and '
         '--fail-on-empty is set.',
       );
-      return 3;
+      return emptyOrFailedRouteExitCode;
     }
-    return 0;
+    return successfulExitCode;
   } finally {
     await capturer.close();
     await server.close();

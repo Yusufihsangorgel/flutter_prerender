@@ -35,6 +35,15 @@ void main() {
     expect(html, isNot(contains('Jerry <script>')));
   });
 
+  test('uses HTML element and attribute escaping modes', () {
+    final html = builder.build(
+      nodes: const [ParagraphContent('Roasters <blend>')],
+      meta: const RouteMeta(description: "Roaster's \"blend\""),
+    );
+    expect(html, contains('<p>Roasters &lt;blend&gt;</p>'));
+    expect(html, contains('content="Roaster\'s &quot;blend&quot;"'));
+  });
+
   test('writes title, description and canonical', () {
     final html = builder.build(
       nodes: const [],

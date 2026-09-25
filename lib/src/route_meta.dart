@@ -1,3 +1,5 @@
+import 'exceptions.dart';
+
 /// SEO metadata for a single prerendered route.
 ///
 /// Any field left `null` falls back to the corresponding value from the
@@ -18,13 +20,17 @@ final class RouteMeta {
   /// Recognised keys: `title`, `description`, `image`, `canonical`, `ogType`
   /// (or `og_type`), and `jsonLd` (or `json_ld`). Unknown keys are ignored.
   factory RouteMeta.fromMap(Map<String, Object?> map) {
-    final rawJsonLd = map['jsonLd'] ?? map['json_ld'];
+    final jsonLdKey = map['jsonLd'] != null ? 'jsonLd' : 'json_ld';
+    final rawJsonLd = map[jsonLdKey];
+    if (rawJsonLd != null && rawJsonLd is! Map) {
+      throw ConfigException('"$jsonLdKey" must be a mapping.');
+    }
     return RouteMeta(
-      title: map['title'] as String?,
-      description: map['description'] as String?,
-      image: map['image'] as String?,
-      canonical: map['canonical'] as String?,
-      ogType: (map['ogType'] ?? map['og_type']) as String?,
+      title: _string(map, 'title'),
+      description: _string(map, 'description'),
+      image: _string(map, 'image'),
+      canonical: _string(map, 'canonical'),
+      ogType: _string(map, 'ogType') ?? _string(map, 'og_type'),
       jsonLd: rawJsonLd is Map ? _deepMap(rawJsonLd) : null,
     );
   }
@@ -47,6 +53,13 @@ final class RouteMeta {
 
   /// A schema.org object rendered as a JSON-LD `<script>` block.
   final Map<String, Object?>? jsonLd;
+
+  static String? _string(Map<String, Object?> map, String key) {
+    final value = map[key];
+    if (value == null) return null;
+    if (value is String) return value;
+    throw ConfigException('"$key" must be a string.');
+  }
 
   /// Returns a new [RouteMeta] where each `null` field is filled in from
   /// [defaults].
