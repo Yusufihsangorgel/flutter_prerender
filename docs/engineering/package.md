@@ -1,6 +1,6 @@
 # Package engineering rules: flutter_prerender
 
-Rules-Version: flutter_prerender/a7105d0f6d47240025706079c7e4b741b41f37be7f481e07743389084623e782
+Rules-Version: flutter_prerender/d2b17515a248476cd02271055bada0659e7f278396c8fc0684aebd48a79f8d7f
 Core-Version: 1
 Core-Digest: 1825fa7ff346dca23e65b1b3bf9b2e3e06959f1414bae9952d596d2f62f09b8f
 Survey-Digest: f90f45c8a172068c3ed3b9488ba5a7cb4e58efa93c380d2d9a70b399349ec35e
@@ -193,7 +193,7 @@ The complete register is docs/engineering/debt.json.
 - flutter_prerender-D009 | small | lib/src/html_builder.dart:216-225 ↔ lib/src/sitemap.dart:68-73 | duplication / ecosystem equivalent (J7)
   Fix: Use HtmlEscape for HTML. Keep the XML escape: HtmlEscape writes the apostrophe as &#39;, not &apos;; example/expected_output pins the output.
   Closure: html_builder escapes HTML through dart:convert HtmlEscape and keeps the XML escape for the apostrophe. example/expected_output and the builder tests still match.
-- flutter_prerender-D010 | small | .github/workflows/ci.yaml (format/analyze `lib test bin`); analysis_options.yaml `exclude: example/**` | CI gap
+- flutter_prerender-D010 | small | .github/workflows/ci.yaml (format and analyze on `lib test bin`); analysis_options.yaml `exclude: example/**` | CI gap
   Fix: Add `tool` to the format/analyze paths; move the pure Dart example outside the excluded tree or analyze it in the action job.
   Closure: CI runs format and analyze over tool in addition to lib test bin. The pure Dart example is analyzed in place or by the action job.
 - flutter_prerender-D011 | small | lib/src/browser.dart:75 ↔ lib/src/semantics_extractor.dart:30 | duplication
