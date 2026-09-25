@@ -2,7 +2,7 @@
 
 - A route or default metadata value of the wrong type is a `ConfigException`
   that names the key. It used to surface as a `TypeError` with a stack trace.
-- `RouteResult.duplicateOf` names the route whose content a collapsed route
+- `RouteResult.duplicateOf` names the earlier route that a collapsed route
   repeated. Exit code 4 reads this field instead of the warning text.
 - The exit codes are named constants, documented once and listed in the
   README.
