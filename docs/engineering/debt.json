@@ -1,0 +1,312 @@
+{
+  "schema_version": 1,
+  "package": "flutter_prerender",
+  "survey_digest": "f90f45c8a172068c3ed3b9488ba5a7cb4e58efa93c380d2d9a70b399349ec35e",
+  "items": [
+    {
+      "id": "flutter_prerender-D001",
+      "source_index": 1,
+      "source_item_digest": "cdc9d80707a9b77b7a2908cfb139e0c084e7f00b3cab1ef12ca5c8ef68349e15",
+      "baseline_revision": "3e32dd8",
+      "status": "open",
+      "size": "small",
+      "locations": [
+        {
+          "path": "lib/src/route_meta.dart",
+          "lines": "23-27"
+        },
+        {
+          "path": "lib/src/config.dart",
+          "lines": "50-51"
+        },
+        {
+          "path": "lib/src/cli.dart",
+          "lines": "155"
+        }
+      ],
+      "kind": "error contract / correctness",
+      "observation": "`RouteMeta.fromMap` uses an `as String?` cast. With `title: 123` in YAML it throws TypeError, not ConfigException; the promise in config.dart:50-51 breaks. Because runCli catches only PrerenderException, the CLI crashes with a stack trace. config_test covers only a wrong top-level type (config_test.dart:85-90).",
+      "certainty": "confirmed",
+      "proposed_fix": "Move the typed helpers into shared private functions (or have RouteMeta.fromMap throw a ConfigException that names the key); add wrong-type tests for defaults and below routes.",
+      "related_rule_ids": [
+        "flutter_prerender/FPR-5"
+      ],
+      "issue_url": null,
+      "closure_criteria": "RouteMeta.fromMap throws a ConfigException naming the offending key for wrong-typed values. New wrong-type tests for defaults and below routes pass.",
+      "review_trigger": "Before modifying the affected code",
+      "resolution": null
+    },
+    {
+      "id": "flutter_prerender-D002",
+      "source_index": 2,
+      "source_item_digest": "4dd2d580b2dc29022fce01070350ed4a2cfcf37c71b7cea7817ec63019bca9d3",
+      "baseline_revision": "3e32dd8",
+      "status": "open",
+      "size": "medium",
+      "locations": [
+        {
+          "path": "lib/flutter_prerender.dart",
+          "lines": "17-31"
+        }
+      ],
+      "kind": "leaking public API",
+      "observation": "15 files are exported without `show`: helpers that are not user facing (joinUrl sitemap.dart:52, resolveWithinRoot static_server.dart:67, contentTypeFor static_server.dart:81, buildParser cli.dart:22, defaultConfigFile cli.dart:19) become public API; every new top-level function leaks too.",
+      "certainty": "confirmed",
+      "proposed_fix": "Now add `show` lists that enumerate the current set exactly (non-breaking) and stop the leak; deprecate the accidentally public helpers and remove them in the next major.",
+      "related_rule_ids": [
+        "flutter_prerender/FPR-9"
+      ],
+      "issue_url": null,
+      "closure_criteria": "lib/flutter_prerender.dart exports each file through a show list that names exactly the intended public set. The accidentally public helpers carry deprecation notes for removal in the next major.",
+      "review_trigger": "Before modifying the affected code",
+      "resolution": null
+    },
+    {
+      "id": "flutter_prerender-D003",
+      "source_index": 3,
+      "source_item_digest": "2b8475a5fac65177c304ce06474351597689f496d6e07228553c9de5aceefd40",
+      "baseline_revision": "3e32dd8",
+      "status": "open",
+      "size": "small",
+      "locations": [
+        {
+          "path": "lib/src/engine.dart",
+          "lines": "112-118"
+        }
+      ],
+      "kind": "string-typed coupling",
+      "observation": "`collapsedOntoRoot` finds duplicates by matching the 'produced the same content' prefix of a human-readable warning; if the message is rewritten, exit code 4 silently stops working.",
+      "certainty": "confirmed",
+      "proposed_fix": "Add a `duplicateOf` (String?) field to RouteResult set at 322-334; the getter reads it; engine_test already pins the current behavior.",
+      "related_rule_ids": [
+        "flutter_prerender/FPR-7"
+      ],
+      "issue_url": null,
+      "closure_criteria": "RouteResult carries a duplicateOf field set where duplicates are detected and collapsedOntoRoot reads that field instead of warning text. engine_test still passes.",
+      "review_trigger": "Before modifying the affected code",
+      "resolution": null
+    },
+    {
+      "id": "flutter_prerender-D004",
+      "source_index": 4,
+      "source_item_digest": "9806e928ae7581bf3f8c6b2a4d9ae4c223533dd95558891cddf2878aaa388bea",
+      "baseline_revision": "3e32dd8",
+      "status": "open",
+      "size": "medium",
+      "locations": [
+        {
+          "path": "lib/src/engine.dart",
+          "lines": "166-271,283-291"
+        }
+      ],
+      "kind": "SRP / cognitive complexity (J2)",
+      "observation": "`run` mixes the crawl loop, the fixed-route loop and the sitemap and robots writing in ~105 lines; `_renderRoute` takes 7 positional parameters, 3 of them mutable output accumulators.",
+      "certainty": "confirmed",
+      "proposed_fix": "A private `_RunState` (results, failedRoutes, signatureToRoute); extract `_crawl`, `_writeSitemap`, `_writeRobots`. Behavior stays pinned by engine_test and crawl_test.",
+      "related_rule_ids": [],
+      "issue_url": null,
+      "closure_criteria": "engine.run delegates to extracted _crawl, _writeSitemap and _writeRobots methods over a private _RunState and _renderRoute takes no mutable accumulators. engine_test and crawl_test still pass.",
+      "review_trigger": "Before modifying the affected code",
+      "resolution": null
+    },
+    {
+      "id": "flutter_prerender-D005",
+      "source_index": 5,
+      "source_item_digest": "07a13ba354597bdffe2a8d960c1149c3464a8fc46654504b422155eba464fe97",
+      "baseline_revision": "3e32dd8",
+      "status": "open",
+      "size": "small",
+      "locations": [
+        {
+          "path": "lib/src/config.dart",
+          "lines": "26-45"
+        },
+        {
+          "path": "lib/src/browser.dart",
+          "lines": "48"
+        },
+        {
+          "path": "lib/src/html_builder.dart",
+          "lines": "22-24"
+        },
+        {
+          "path": "lib/src/parity.dart",
+          "lines": "72"
+        }
+      ],
+      "kind": "duplicated defaults",
+      "observation": "Default values live in several places: the 4000 ms timeout three times; 'en', '/flutter_bootstrap.js', 0.9, 100 and 'build/web' twice each. When one changes, the YAML path and the constructor path diverge.",
+      "certainty": "confirmed",
+      "proposed_fix": "Have fromMap fall back to the fields of a single `const PrerenderConfig()` instance; have the engine pass every value explicitly.",
+      "related_rule_ids": [
+        "flutter_prerender/FPR-6"
+      ],
+      "issue_url": null,
+      "closure_criteria": "fromMap falls back to the defaults of one const PrerenderConfig() and the engine passes every value explicitly. config_test still passes.",
+      "review_trigger": "Before modifying the affected code",
+      "resolution": null
+    },
+    {
+      "id": "flutter_prerender-D006",
+      "source_index": 6,
+      "source_item_digest": "979b85fc40ee94ce1cb1c7779ef6523b914b9a2fe507c9e6dc099b1df4b443b1",
+      "baseline_revision": "3e32dd8",
+      "status": "open",
+      "size": "small",
+      "locations": [
+        {
+          "path": "lib/src/cli.dart",
+          "lines": "123,157,264,270,278"
+        }
+      ],
+      "kind": "magic number / contract documentation",
+      "observation": "Exit codes are bare literals scattered across the function; the phrase 'exit code' does not appear in README or action.yml (grep).",
+      "certainty": "confirmed",
+      "proposed_fix": "Named constants with dartdoc in one place; a table in the README.",
+      "related_rule_ids": [
+        "flutter_prerender/FPR-7"
+      ],
+      "issue_url": null,
+      "closure_criteria": "Exit codes live in named constants with dartdoc in one place and the README documents the table. cli_test still passes.",
+      "review_trigger": "Before modifying the affected code",
+      "resolution": null
+    },
+    {
+      "id": "flutter_prerender-D007",
+      "source_index": 7,
+      "source_item_digest": "9060bbe21f51e648ab962518c92509a238e745628264759792fa8bfd9f8cc930",
+      "baseline_revision": "3e32dd8",
+      "status": "open",
+      "size": "small",
+      "locations": [
+        {
+          "path": "lib/src/browser.dart",
+          "lines": "99,165,168"
+        }
+      ],
+      "kind": "unjustified operating constant (J5/D1)",
+      "observation": "The 300 ms and 350 ms polling delays and the `--no-sandbox` launch flag used on every run are unjustified.",
+      "certainty": "confirmed",
+      "proposed_fix": "A named `static const` with a one-sentence rationale; state why the sandbox flag is needed or make it configurable.",
+      "related_rule_ids": [],
+      "issue_url": null,
+      "closure_criteria": "browser.dart declares the polling delays as named static const values with a one-sentence rationale. The sandbox flag is justified in a comment or made configurable.",
+      "review_trigger": "Before modifying the affected code",
+      "resolution": null
+    },
+    {
+      "id": "flutter_prerender-D008",
+      "source_index": 8,
+      "source_item_digest": "afd11fb894664affd2ec10aa719f605fd840a4ae4c47d6096d1c72ba2ee12849",
+      "baseline_revision": "3e32dd8",
+      "status": "open",
+      "size": "small",
+      "locations": [
+        {
+          "path": "lib/src/static_server.dart",
+          "lines": "36,43-62"
+        }
+      ],
+      "kind": "unlistened async error (PLAUSIBLE)",
+      "observation": "`server.listen(instance._handle)` discards the handler's Future. An I/O error inside `_handle` (the client drops the connection mid addStream; happens often when puppeteer closes a page) becomes an uncaught async error in the CLI process. Not reproduced by a run.",
+      "certainty": "probable",
+      "proposed_fix": "Wrap the handler body with `on IOException`/`on HttpException` and close the response silently; extend static_server_test with a cancelled request.",
+      "related_rule_ids": [],
+      "issue_url": null,
+      "closure_criteria": "The static server handler wraps its body with on IOException and on HttpException and closes the response quietly. static_server_test covers a cancelled request.",
+      "review_trigger": "Before modifying the affected code",
+      "resolution": null
+    },
+    {
+      "id": "flutter_prerender-D009",
+      "source_index": 9,
+      "source_item_digest": "0bb182d25feacd45c09d889e6b8b6037d1c4797c115670b81847edeb9baee1fc",
+      "baseline_revision": "3e32dd8",
+      "status": "open",
+      "size": "small",
+      "locations": [
+        {
+          "path": "lib/src/html_builder.dart",
+          "lines": "216-225"
+        },
+        {
+          "path": "lib/src/sitemap.dart",
+          "lines": "68-73"
+        }
+      ],
+      "kind": "duplication / ecosystem equivalent (J7)",
+      "observation": "Three hand-written escape functions; the HTML ones are covered by dart:convert `HtmlEscape(HtmlEscapeMode.element/attribute)`.",
+      "certainty": "confirmed",
+      "proposed_fix": "Use HtmlEscape for HTML. Keep the XML escape: HtmlEscape writes the apostrophe as &#39;, not &apos;; example/expected_output pins the output.",
+      "related_rule_ids": [
+        "flutter_prerender/FPR-14"
+      ],
+      "issue_url": null,
+      "closure_criteria": "html_builder escapes HTML through dart:convert HtmlEscape and keeps the XML escape for the apostrophe. example/expected_output and the builder tests still match.",
+      "review_trigger": "Before modifying the affected code",
+      "resolution": null
+    },
+    {
+      "id": "flutter_prerender-D010",
+      "source_index": 10,
+      "source_item_digest": "cc7799a1e43e4219c7e282e350d8774515cf8956f8ca8c94d70b6c87ea809204",
+      "baseline_revision": "3e32dd8",
+      "status": "open",
+      "size": "small",
+      "locations": [
+        {
+          "path": ".github/workflows/ci.yaml",
+          "lines": null
+        },
+        {
+          "path": "format/",
+          "lines": null
+        },
+        {
+          "path": "analysis_options.yaml",
+          "lines": null
+        },
+        {
+          "path": "example/",
+          "lines": null
+        }
+      ],
+      "kind": "CI gap",
+      "observation": "tool/*.dart (2 files, 415 lines) and the pure Dart `example/what_a_crawler_sees.dart` are never analyzed and their format is not checked.",
+      "certainty": "confirmed",
+      "proposed_fix": "Add `tool` to the format/analyze paths; move the pure Dart example outside the excluded tree or analyze it in the action job.",
+      "related_rule_ids": [],
+      "issue_url": null,
+      "closure_criteria": "CI runs format and analyze over tool in addition to lib test bin. The pure Dart example is analyzed in place or by the action job.",
+      "review_trigger": "Before modifying the affected code",
+      "resolution": null
+    },
+    {
+      "id": "flutter_prerender-D011",
+      "source_index": 11,
+      "source_item_digest": "b9dd84dd31c183f40a277d085a9395b23902be7f61b5be86429a688aeaa7128e",
+      "baseline_revision": "3e32dd8",
+      "status": "open",
+      "size": "small",
+      "locations": [
+        {
+          "path": "lib/src/browser.dart",
+          "lines": "75"
+        },
+        {
+          "path": "lib/src/semantics_extractor.dart",
+          "lines": "30"
+        }
+      ],
+      "kind": "duplication",
+      "observation": "The engine's 'Enable accessibility' label is written separately in two files; if Flutter changes the label, one falls behind.",
+      "certainty": "confirmed",
+      "proposed_fix": "A single internal constant; both files use it.",
+      "related_rule_ids": [],
+      "issue_url": null,
+      "closure_criteria": "One internal constant holds the Enable accessibility label and both browser.dart and semantics_extractor.dart use it.",
+      "review_trigger": "Before modifying the affected code",
+      "resolution": null
+    }
+  ]
+}
