@@ -13,7 +13,7 @@ body:
     attributes:
       label: Package version
       description: The flutter_prerender version your app resolves, from pubspec.lock.
-      placeholder: "1.5.0"
+      placeholder: "1.5.1"
     validations:
       required: true
   - type: textarea

@@ -129,8 +129,8 @@ dart pub global activate flutter_prerender
 **1. Turn off the hash URL strategy.** Flutter web defaults to putting the route
 after a `#`, which no server and no crawler ever sees, so every path serves the
 same page. Prerendering an app in that state produces N byte-identical files.
-This tool now detects that and exits `4` rather than writing them, but the fix
-is in your app:
+This tool detects that after it has written the files and exits `4`. Clear the
+failed output before you deploy it. The fix is in your app:
 
 ```dart
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -186,7 +186,9 @@ existing routes indexable without a rewrite.
 dart pub global activate flutter_prerender
 ```
 
-Or add it as a dev dependency and run it with `dart run`.
+From a checkout of this repository, or from a project that lists it as a dev
+dependency, `dart run flutter_prerender` works in place of the global command.
+The commands below use the global executable.
 
 The tool drives Chrome through `package:puppeteer`. It will download a private
 Chromium on first use, or you can point it at an existing browser with
@@ -196,7 +198,7 @@ Chromium on first use, or you can point it at an existing browser with
 
 ```sh
 flutter build web
-dart run flutter_prerender --build-dir build/web --routes routes.txt \
+flutter_prerender --build-dir build/web --routes routes.txt \
   --out build/prerendered --base-url https://example.com
 ```
 
@@ -227,7 +229,7 @@ routes:
 ```
 
 ```sh
-dart run flutter_prerender -c flutter_prerender.yaml
+flutter_prerender -c flutter_prerender.yaml
 ```
 
 CLI flags override the config file. See `flutter_prerender --help` for the full
@@ -241,7 +243,7 @@ already recovers from each page. Every same-origin link is normalised and
 prerendered if it has not been seen yet:
 
 ```sh
-dart run flutter_prerender --build-dir build/web --crawl \
+flutter_prerender --build-dir build/web --crawl \
   --out build/prerendered --base-url https://example.com
 ```
 
@@ -258,7 +260,7 @@ A sitemap nothing points at is half the job. Pass `--robots` and a `robots.txt`
 is written next to the sitemap, declaring it:
 
 ```sh
-dart run flutter_prerender --base-url https://example.com --sitemap --robots
+flutter_prerender --routes routes.txt --base-url https://example.com --sitemap --robots
 ```
 
 ```
@@ -268,12 +270,15 @@ Allow: /
 Sitemap: https://example.com/sitemap.xml
 ```
 
-It is off by default and never replaces a `robots.txt` that is already in the
-output. A project that ships `web/robots.txt` has it copied into the build, and
-overwriting somebody's crawl rules would be a worse bug than not writing the
-file at all; the existing one is left alone and the run reports it. The
-`Sitemap:` line only appears when a sitemap was actually produced, which keeps
-crawlers from being sent to a URL that would 404.
+It is off by default. It does not replace a `robots.txt` that is already in the
+output directory, and the run reports it when it leaves one alone. That check
+covers only the output directory. A `web/robots.txt` in your project lands in
+`build/web`. A separate `build/prerendered` does not contain it, and the
+overlay copy in the next section then replaces the original file. If your
+project ships its own rules, leave `--robots` off, or copy those rules into the
+output before you overlay it. The `Sitemap:` line only appears when a sitemap
+was actually produced, which keeps crawlers from being sent to a URL that would
+404.
 
 ## Serving the output
 
@@ -342,10 +347,29 @@ but is recovered as a paragraph. To get real headings, links and image alt
 text, annotate the widgets you care about:
 
 ```dart
-Semantics(headingLevel: 1, child: Text('Page title'));
-Link(uri: Uri.parse('/next'), builder: ...);          // -> <a href>
-Semantics(image: true, label: 'Alt text', child: ...); // -> <img alt>
+import 'package:flutter/material.dart';
+import 'package:url_launcher/link.dart';
+
+// Inside a widget's build method:
+Column(
+  children: <Widget>[
+    Semantics(headingLevel: 1, child: const Text('Page title')), // -> <h1>
+    Link(                                                        // -> <a href>
+      uri: Uri.parse('/next'),
+      builder: (context, followLink) =>
+          TextButton(onPressed: followLink, child: const Text('Next')),
+    ),
+    Semantics(                                                   // -> <img alt>
+      image: true,
+      label: 'Alt text',
+      child: const SizedBox(width: 240, height: 140),
+    ),
+  ],
+)
 ```
+
+`Link` comes from `url_launcher`. Add `url_launcher` to your app's
+dependencies.
 
 The app does not need to call `ensureSemantics()`. The tool turns the
 accessibility tree on from the outside, so no app source change is required.
@@ -420,8 +444,8 @@ The scope is deliberately narrow. Known limits:
 
 ## Compatibility
 
-Developed and tested against Flutter 3.41.2 (web, both the CanvasKit and skwasm
-renderers). Later 3.x releases were not exercised in this version.
+CI builds the example web app on the stable Flutter channel. Verify each web
+renderer against your Flutter version before relying on this integration.
 
 Flutter's semantics DOM is an engine-internal contract, not a public API. After
 a Flutter upgrade, re-verify: run the tool on your build and confirm the output

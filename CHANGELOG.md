@@ -1,3 +1,19 @@
+## 1.5.1
+
+- The README's Use, Crawling and robots.txt commands now run the globally
+  activated `flutter_prerender` command, not `dart run`, which fails in an app
+  that does not depend on the package.
+- The standalone robots.txt command now passes `--routes` and no longer stops
+  with "No routes to prerender".
+- The README says the hash URL strategy check exits `4` after the files are
+  written. Clear the output before deploying.
+- The README says the existing `robots.txt` check covers only the output
+  directory, and how to keep your own rules when you overlay the output.
+- The semantics example in the README is a complete snippet with the
+  `url_launcher` import and a real `Link` builder.
+- The Compatibility section describes the CI build instead of a tested Flutter
+  version and renderer matrix.
+
 ## 1.5.0
 
 - A committed measurement of what a crawler that does not run JavaScript
