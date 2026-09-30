@@ -90,6 +90,22 @@ the `i` is matched text, not a flag, so `hasMatch('Yandex')` and
 `hasMatch('GOOGLE')` both return false. Its issues #1 and #7 are open on
 whether the resulting SEO is trustworthy at all.
 
+**Instead of meta_seo.** It is a runtime package for head tags. You call
+`MetaSEO().config()` in `main()`, then set the author, description, keywords,
+Open Graph and Twitter Card tags, or any custom name or property tag, from a
+widget's `build()`. Its documented API covers head tags. Because the tags are
+added while the app runs, a fetcher that does not run JavaScript never sees
+them. This tool writes the tags into each route's file before you deploy, and
+also writes that route's headings, paragraphs and links, JSON-LD from the route
+config, and with `--sitemap` a `sitemap.xml`. With `--fail-on-empty`, the run
+exits `3` when a route recovers no content.
+
+Pick meta_seo when head tags are all you need and the crawlers you care about
+run JavaScript, or when a tag has to depend on data the app only has at
+runtime. It adds one dependency to your app, with no Chromium download and no
+extra CI step. The tags this tool writes come from a config file and are fixed
+when you run it.
+
 ## Reach for it when
 
 - A Flutter web app has to appear in Google's index with its real text, not an

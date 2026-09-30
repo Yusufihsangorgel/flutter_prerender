@@ -13,6 +13,8 @@
   `url_launcher` import and a real `Link` builder.
 - The Compatibility section describes the CI build instead of a tested Flutter
   version and renderer matrix.
+- The README compares the tool with meta_seo and says when meta_seo is the
+  better choice.
 
 ## 1.5.0
 
