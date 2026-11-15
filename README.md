@@ -2,6 +2,14 @@
 
 ![flutter_prerender banner](https://raw.githubusercontent.com/Yusufihsangorgel/flutter_prerender/main/doc/banner.png)
 
+For each route of a Flutter web app, `flutter_prerender` writes a static HTML
+file with the tags a link preview is built from: `<title>`, Open Graph and
+Twitter Card tags, and the description and preview image you set in the
+config. Most chat apps and social sites read those tags from the raw HTML and
+do not run the app. The same file holds the route's headings, paragraphs and
+links, and JSON-LD when you configure it. A crawler that does not run
+JavaScript can read all of it.
+
 ![The same build read twice: `flutter build web` gives a crawler zero words,
 the prerendered output gives it the real title, the description, Open Graph
 tags and JSON-LD](https://raw.githubusercontent.com/Yusufihsangorgel/flutter_prerender/main/doc/demo.gif)
@@ -52,10 +60,6 @@ and Google's crawler does execute JavaScript in many cases, so the plain
 build is not necessarily invisible to it. The measured claim is about what
 is in the HTML at fetch time and about crawlers that do not execute
 scripts.
-
-Link previews are where the static HTML matters most. Chat apps and social
-sites build a preview card from the Open Graph tags in the raw HTML and do not
-run the app.
 
 Reproduce:
 

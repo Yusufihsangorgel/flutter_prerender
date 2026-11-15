@@ -1,8 +1,8 @@
 ## 1.5.1
 
-- The README says link previews are where the static HTML matters most, since
-  chat apps and social sites read the Open Graph tags from the raw HTML and do
-  not run the app.
+- The README opens with what each prerendered file carries for a link
+  preview. Most chat apps and social sites read those tags from the raw HTML
+  and do not run the app.
 - The README's Use, Crawling and robots.txt commands now run the globally
   activated `flutter_prerender` command, not `dart run`, which fails in an app
   that does not depend on the package.
