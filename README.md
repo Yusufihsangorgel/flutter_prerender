@@ -53,6 +53,10 @@ build is not necessarily invisible to it. The measured claim is about what
 is in the HTML at fetch time and about crawlers that do not execute
 scripts.
 
+Link previews are where the static HTML matters most. Chat apps and social
+sites build a preview card from the Open Graph tags in the raw HTML and do not
+run the app.
+
 Reproduce:
 
 ```sh
