@@ -103,17 +103,47 @@ routes:
     );
   });
 
-  test('rejects non-string metadata under routes', () {
-    expect(
-      () => PrerenderConfig.fromYaml('routes:\n  - path: /\n    title: 404'),
-      throwsA(
-        isA<ConfigException>().having(
-          (exception) => exception.message,
-          'message',
-          contains('"title"'),
+  for (final key in const [
+    'title',
+    'description',
+    'image',
+    'canonical',
+    'ogType',
+    'og_type',
+  ]) {
+    test('rejects non-string $key under routes', () {
+      expect(
+        () => PrerenderConfig.fromYaml('routes:\n  - path: /\n    $key: 404'),
+        throwsA(
+          isA<ConfigException>().having(
+            (exception) => exception.message,
+            'message',
+            contains('"$key"'),
+          ),
         ),
-      ),
+      );
+    });
+  }
+
+  test('reads json_ld when jsonLd is null', () {
+    final config = PrerenderConfig.fromYaml(
+      'routes:\n  - path: /\n    jsonLd: null\n    json_ld:\n      name: B',
     );
+    expect(config.routes.single.meta.jsonLd, {'name': 'B'});
+  });
+
+  test('prefers jsonLd and ogType over the snake_case keys', () {
+    final config = PrerenderConfig.fromYaml(
+      'defaults:\n'
+      '  jsonLd:\n'
+      '    name: A\n'
+      '  json_ld:\n'
+      '    name: B\n'
+      '  ogType: article\n'
+      '  og_type: website',
+    );
+    expect(config.defaults.jsonLd, {'name': 'A'});
+    expect(config.defaults.ogType, 'article');
   });
 
   for (final key in const ['jsonLd', 'json_ld']) {

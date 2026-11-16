@@ -18,12 +18,12 @@
   version and renderer matrix.
 - The README compares the tool with meta_seo and says when meta_seo is the
   better choice.
-- A route or default metadata value of the wrong type, a `defaults` entry that
-  is not a mapping, and a `jsonLd` value that is not a mapping are a
-  `ConfigException` that names the key. A wrong type used to surface as a
-  `TypeError` with a stack trace, and the other two were ignored silently.
-- A file the static server cannot read while streaming it no longer ends the
-  run with an uncaught asynchronous I/O error.
+- A route or default metadata value of the wrong type, a `defaults` value that
+  is not a mapping, and a `jsonLd` value that is not a mapping now fail with a
+  `ConfigException` that names the key. A wrong type used to end the run with
+  a `TypeError` and a stack trace, and the other two were silently ignored.
+- A file the static server cannot open or read no longer ends the run with an
+  uncaught I/O error.
 
 ## 1.5.0
 

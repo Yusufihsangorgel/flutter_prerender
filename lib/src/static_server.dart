@@ -61,12 +61,13 @@ final class StaticServer {
       await response.addStream(file.openRead());
       await response.close();
     } on IOException {
-      // The file could not be read, or the client disconnected while it was
-      // being streamed. Neither may end the run with an uncaught error.
+      // The file could not be opened or read, for example because of its
+      // permissions. Close the response and keep the error inside this
+      // handler, where it cannot end the run.
       try {
         await response.close();
       } on IOException {
-        // The connection is already gone.
+        // The response has already failed.
       }
     }
   }
