@@ -77,6 +77,10 @@ final class PrerenderConfig {
     } else if (parity != null) {
       throw const ConfigException('"parity" must be a boolean or a mapping.');
     }
+    final rawDefaults = map['defaults'];
+    if (rawDefaults != null && rawDefaults is! Map) {
+      throw const ConfigException('"defaults" must be a mapping.');
+    }
     return PrerenderConfig(
       buildDir: _string(map, 'buildDir') ?? 'build/web',
       outDir:
@@ -98,9 +102,9 @@ final class PrerenderConfig {
           _string(map, 'chrome') ?? _string(map, 'chromeExecutable'),
       crawl: _bool(map, 'crawl') ?? false,
       maxPages: _int(map, 'maxPages') ?? 100,
-      defaults: map['defaults'] is Map
-          ? RouteMeta.fromMap(_toStringMap(map['defaults'] as Map))
-          : const RouteMeta(),
+      defaults: rawDefaults == null
+          ? const RouteMeta()
+          : RouteMeta.fromMap(_toStringMap(rawDefaults as Map)),
       routes: _parseRoutes(map['routes']),
     );
   }

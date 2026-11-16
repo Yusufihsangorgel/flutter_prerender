@@ -69,5 +69,35 @@ void main() {
       final body = await response.transform(systemEncoding.decoder).join();
       expect(body, contains('<h1>Home</h1>'));
     });
+
+    test('keeps serving after a file fails to open for streaming', () async {
+      final locked = File(p.join(dir.path, 'locked.js'))
+        ..writeAsStringSync('console.log(2)');
+      final chmod = await Process.run('chmod', ['000', locked.path]);
+      expect(chmod.exitCode, 0);
+      addTearDown(() => Process.run('chmod', ['644', locked.path]));
+      try {
+        locked.openSync().closeSync();
+        markTestSkipped('The file is still readable, for example as root.');
+        return;
+      } on FileSystemException {
+        // The file is unreadable, as intended.
+      }
+
+      // The failed request may end with a dropped connection or an error
+      // status. It must not hang, and it must not take the server down.
+      try {
+        final failed = await get(
+          '/locked.js',
+        ).timeout(const Duration(seconds: 5));
+        await failed.drain<void>();
+      } on HttpException {
+        // The server dropped the connection.
+      }
+
+      final next = await get('/main.dart.js');
+      expect(next.statusCode, HttpStatus.ok);
+      await next.drain<void>();
+    }, testOn: 'posix');
   });
 }

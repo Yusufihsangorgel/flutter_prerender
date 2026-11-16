@@ -57,8 +57,18 @@ final class StaticServer {
       return;
     }
     response.headers.contentType = ContentType.parse(contentTypeFor(file.path));
-    await response.addStream(file.openRead());
-    await response.close();
+    try {
+      await response.addStream(file.openRead());
+      await response.close();
+    } on IOException {
+      // The file could not be read, or the client disconnected while it was
+      // being streamed. Neither may end the run with an uncaught error.
+      try {
+        await response.close();
+      } on IOException {
+        // The connection is already gone.
+      }
+    }
   }
 }
 
